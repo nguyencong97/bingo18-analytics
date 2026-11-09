@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "data_hash": "333d2ecda703aafccde4dfba7e866a945dc7e7afdd1ef525ad910b749c1e12ee",
+    "data_hash": "fd6f89461c4ff574b66a43a2a9ec5f6faaba3ac251f5104d5e0b6bec2491b89b",
     "total_draws": 99561,
     "version": "1.0.0",
     "seed": 20261109,
-    "computed_at": "2026-11-09T21:42:29.569157"
+    "computed_at": "2026-11-09T15:25:15.593164"
   },
   "m1_m2_distribution": {
     "n": 99561,
@@ -638,7 +638,7 @@
       "expected_mean_gap": 216.0,
       "max_gap": 1209,
       "ks_statistic": 0.0428,
-      "ks_p_value": 0.3575624699081754,
+      "ks_p_value": 0.35756246990817864,
       "is_geometric": true
     },
     "4": {
@@ -678,7 +678,7 @@
       "expected_mean_gap": 14.4,
       "max_gap": 124,
       "ks_statistic": 0.0694,
-      "ks_p_value": 3.8644737128635983e-29,
+      "ks_p_value": 3.864473712863496e-29,
       "is_geometric": false
     },
     "8": {
@@ -748,7 +748,7 @@
       "expected_mean_gap": 14.4,
       "max_gap": 113,
       "ks_statistic": 0.0694,
-      "ks_p_value": 1.201437906121619e-29,
+      "ks_p_value": 1.2014379061215867e-29,
       "is_geometric": false
     },
     "15": {
@@ -778,7 +778,7 @@
       "expected_mean_gap": 72.0,
       "max_gap": 562,
       "ks_statistic": 0.0309,
-      "ks_p_value": 0.13569269680339513,
+      "ks_p_value": 0.1356926968033978,
       "is_geometric": true
     },
     "18": {
@@ -788,7 +788,7 @@
       "expected_mean_gap": 216.0,
       "max_gap": 1564,
       "ks_statistic": 0.0531,
-      "ks_p_value": 0.16182523054588316,
+      "ks_p_value": 0.16182523054588493,
       "is_geometric": true
     }
   },
