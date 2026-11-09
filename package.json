@@ -1,0 +1,7 @@
+{
+  "name": "bingo18-analytics-root",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix web install && npm --prefix web run build"
+  }
+}

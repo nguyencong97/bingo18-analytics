@@ -1,76 +1,43 @@
-/**
- * =========================================================================
- * BINGO18 ANALYTICS - GOOGLE APPS SCRIPT WEB APP
- * =========================================================================
- * Bảng tính: https://docs.google.com/spreadsheets/d/1X5bozWVSq1_Nzag87b5OdNQ1BUAvoDwriWLnvwZ9xbY/
- *
- * HƯỚNG DẪN CÀI ĐẶT 1 LẦN DUY NHẤT:
- * 1. Mở bảng tính Google Sheet trên trình duyệt.
- * 2. Trên thanh menu, chọn: Tiện ích mở rộng (Extensions) -> Apps Script.
- * 3. Xóa nội dung mặc định trong tệp Code.gs và dán toàn bộ đoạn mã này vào.
- * 4. Bấm biểu tượng "Lưu" (Ctrl + S).
- * 5. Bấm nút màu xanh "Triển khai" (Deploy) ở góc trên bên phải -> "Tùy chọn triển khai mới" (New deployment).
- * 6. Bấm biểu tượng bánh răng chọn loại: "Ứng dụng web" (Web app).
- * 7. Thiết lập cấu hình:
- *    - Mô tả: Bingo18 Live Sync
- *    - Thực thi dưới dạng: Tôi (email của bạn)
- *    - Ai có quyền truy cập: "Bất kỳ ai" (Anyone)
- * 8. Bấm "Triển khai" (Deploy) và cấp quyền (Authorize access).
- * 9. Sao chép "URL ứng dụng web" (Web App URL) nhận được.
- */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("🎲 Bingo18")
+    .addItem("📥 Nạp dữ liệu gần nhất", "loadRecentData")
+    .addToUi();
+}
+
+function loadRecentData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
+  sheet.setName("Chi tiết");
+  sheet.clear();
+  var url = "https://raw.githubusercontent.com/nguyencong97/bingo18-analytics/main/data/sheet_initial_import.csv";
+  var resp = UrlFetchApp.fetch(url);
+  var csvData = Utilities.parseCsv(resp.getContentText());
+  var header = csvData[0];
+  var recentRows = csvData.slice(-3000); // 3,000 kỳ mới nhất
+  var allRows = [header].concat(recentRows);
+  sheet.getRange(1, 1, allRows.length, header.length).setValues(allRows);
+  sheet.getRange(1, 1, 1, header.length).setFontWeight("bold").setBackground("#F18806").setFontColor("#FFFFFF");
+  SpreadsheetApp.getUi().alert("✅ Đã nạp thành công " + recentRows.length + " kỳ quay mới nhất vào Sheet!");
+}
 
 function doPost(e) {
   try {
-    if (!e || !e.postData || !e.postData.contents) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "No post data" }))
-        .setMimeType(ContentService.MimeType.JSON);
+    var data = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Chi tiết") || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var list = data.records || (data.record ? [data.record] : []);
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (r && r.draw_id) {
+        sheet.appendRow([r.draw_id, r.date, r.time, r.slot_in_day, r.d1, r.d2, r.d3, r.total, r.result, new Date()]);
+      }
     }
-
-    var payload = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("Chi tiết");
-    
-    // Nếu chưa có sheet 'Chi tiết', khởi tạo tự động
-    if (!sheet) {
-      sheet = ss.getActiveSheet();
-      sheet.setName("Chi tiết");
-      sheet.appendRow(["Mã kỳ", "Ngày quay", "Giờ", "Slot", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng", "Bộ số", "Thời điểm ghi nhận"]);
-      sheet.getRange(1, 1, 1, 10).setFontWeight("bold").setBackground("#F18806").setFontColor("#FFFFFF");
-    }
-
-    // Ghi nhận bản ghi đơn lẻ hoặc danh sách
-    var records = payload.records || (payload.record ? [payload.record] : []);
-    for (var i = 0; i < records.length; i++) {
-      var r = records[i];
-      sheet.appendRow([
-        r.draw_id || "",
-        r.date || "",
-        r.time || "",
-        r.slot_in_day || "",
-        r.d1 || "",
-        r.d2 || "",
-        r.d3 || "",
-        r.total || "",
-        r.result || "",
-        new Date().toISOString()
-      ]);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "success",
-      appended: records.length,
-      timestamp: new Date().toISOString()
-    })).setMimeType(ContentService.MimeType.JSON);
-
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: list.length })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", msg: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-function doGet(e) {
-  return ContentService.createTextOutput("Bingo18 Analytics Web App is active and running!")
-    .setMimeType(ContentService.MimeType.TEXT);
+function doGet() {
+  return ContentService.createTextOutput("Bingo18 Web App OK");
 }
