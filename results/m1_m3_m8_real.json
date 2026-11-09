@@ -1,0 +1,330 @@
+{
+  "metadata": {
+    "data_hash": "333d2ecda703aafccde4dfba7e866a945dc7e7afdd1ef525ad910b749c1e12ee",
+    "total_draws": 99561,
+    "version": "1.0.0",
+    "seed": 20261109,
+    "computed_at": "2026-11-09T21:38:06.046601"
+  },
+  "m1_m2_distribution": {
+    "n": 99561,
+    "distribution": {
+      "3": {
+        "sum": 3,
+        "ways": 1,
+        "prob_theoretical": 0.004629629629629629,
+        "observed": 462,
+        "expected": 460.93,
+        "ratio": 0.00464,
+        "z_score": 0.0499,
+        "ci_95_lower": 0.004228,
+        "ci_95_upper": 0.005082
+      },
+      "4": {
+        "sum": 4,
+        "ways": 3,
+        "prob_theoretical": 0.013888888888888888,
+        "observed": 1336,
+        "expected": 1382.79,
+        "ratio": 0.013419,
+        "z_score": -1.2671,
+        "ci_95_lower": 0.012713,
+        "ci_95_upper": 0.014153
+      },
+      "5": {
+        "sum": 5,
+        "ways": 6,
+        "prob_theoretical": 0.027777777777777776,
+        "observed": 2806,
+        "expected": 2765.58,
+        "ratio": 0.028184,
+        "z_score": 0.7794,
+        "ci_95_lower": 0.027164,
+        "ci_95_upper": 0.029231
+      },
+      "6": {
+        "sum": 6,
+        "ways": 10,
+        "prob_theoretical": 0.046296296296296294,
+        "observed": 4704,
+        "expected": 4609.31,
+        "ratio": 0.047247,
+        "z_score": 1.4282,
+        "ci_95_lower": 0.045938,
+        "ci_95_upper": 0.048584
+      },
+      "7": {
+        "sum": 7,
+        "ways": 15,
+        "prob_theoretical": 0.06944444444444445,
+        "observed": 6844,
+        "expected": 6913.96,
+        "ratio": 0.068742,
+        "z_score": -0.8722,
+        "ci_95_lower": 0.067178,
+        "ci_95_upper": 0.070331
+      },
+      "8": {
+        "sum": 8,
+        "ways": 21,
+        "prob_theoretical": 0.09722222222222222,
+        "observed": 9671,
+        "expected": 9679.54,
+        "ratio": 0.097136,
+        "z_score": -0.0914,
+        "ci_95_lower": 0.095304,
+        "ci_95_upper": 0.098993
+      },
+      "9": {
+        "sum": 9,
+        "ways": 25,
+        "prob_theoretical": 0.11574074074074074,
+        "observed": 11434,
+        "expected": 11523.26,
+        "ratio": 0.114844,
+        "z_score": -0.8843,
+        "ci_95_lower": 0.11287,
+        "ci_95_upper": 0.116841
+      },
+      "10": {
+        "sum": 10,
+        "ways": 27,
+        "prob_theoretical": 0.125,
+        "observed": 12477,
+        "expected": 12445.12,
+        "ratio": 0.12532,
+        "z_score": 0.3055,
+        "ci_95_lower": 0.12327,
+        "ci_95_upper": 0.127393
+      },
+      "11": {
+        "sum": 11,
+        "ways": 27,
+        "prob_theoretical": 0.125,
+        "observed": 12431,
+        "expected": 12445.12,
+        "ratio": 0.124858,
+        "z_score": -0.1354,
+        "ci_95_lower": 0.122811,
+        "ci_95_upper": 0.126927
+      },
+      "12": {
+        "sum": 12,
+        "ways": 25,
+        "prob_theoretical": 0.11574074074074074,
+        "observed": 11477,
+        "expected": 11523.26,
+        "ratio": 0.115276,
+        "z_score": -0.4583,
+        "ci_95_lower": 0.113299,
+        "ci_95_upper": 0.117276
+      },
+      "13": {
+        "sum": 13,
+        "ways": 21,
+        "prob_theoretical": 0.09722222222222222,
+        "observed": 9678,
+        "expected": 9679.54,
+        "ratio": 0.097207,
+        "z_score": -0.0165,
+        "ci_95_lower": 0.095373,
+        "ci_95_upper": 0.099064
+      },
+      "14": {
+        "sum": 14,
+        "ways": 15,
+        "prob_theoretical": 0.06944444444444445,
+        "observed": 6965,
+        "expected": 6913.96,
+        "ratio": 0.069957,
+        "z_score": 0.6363,
+        "ci_95_lower": 0.06838,
+        "ci_95_upper": 0.071559
+      },
+      "15": {
+        "sum": 15,
+        "ways": 10,
+        "prob_theoretical": 0.046296296296296294,
+        "observed": 4664,
+        "expected": 4609.31,
+        "ratio": 0.046846,
+        "z_score": 0.8249,
+        "ci_95_lower": 0.045541,
+        "ci_95_upper": 0.048176
+      },
+      "16": {
+        "sum": 16,
+        "ways": 6,
+        "prob_theoretical": 0.027777777777777776,
+        "observed": 2775,
+        "expected": 2765.58,
+        "ratio": 0.027872,
+        "z_score": 0.1816,
+        "ci_95_lower": 0.026859,
+        "ci_95_upper": 0.028914
+      },
+      "17": {
+        "sum": 17,
+        "ways": 3,
+        "prob_theoretical": 0.013888888888888888,
+        "observed": 1397,
+        "expected": 1382.79,
+        "ratio": 0.014032,
+        "z_score": 0.3848,
+        "ci_95_lower": 0.01331,
+        "ci_95_upper": 0.014782
+      },
+      "18": {
+        "sum": 18,
+        "ways": 1,
+        "prob_theoretical": 0.004629629629629629,
+        "observed": 440,
+        "expected": 460.93,
+        "ratio": 0.004419,
+        "z_score": -0.9772,
+        "ci_95_lower": 0.004017,
+        "ci_95_upper": 0.004851
+      }
+    }
+  },
+  "m3_chi2_tests": {
+    "sums_df15": {
+      "n": 99561,
+      "chi2": 7.9668,
+      "df": 15,
+      "p_value": 0.9251077951654934,
+      "is_significant": false
+    },
+    "dice_df5": {
+      "n": 298683,
+      "chi2": 7.5576,
+      "df": 5,
+      "p_value": 0.1823611972485956,
+      "is_significant": false,
+      "counts": {
+        "1": 49373,
+        "2": 49949,
+        "3": 50192,
+        "4": 49682,
+        "5": 49743,
+        "6": 49744
+      }
+    },
+    "ordered_216_df215": {
+      "n": 99561,
+      "chi2": 222.1592,
+      "df": 215,
+      "p_value": 0.35436737334552326,
+      "is_significant": false
+    },
+    "unordered_56_df55": {
+      "n": 99561,
+      "chi2": 50.4287,
+      "df": 55,
+      "p_value": 0.6496905129330028,
+      "is_significant": false
+    }
+  },
+  "m8_date_analysis": {
+    "num_days": 705,
+    "sum_outlier_tests": {
+      "3": {
+        "outlier_days": 4,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0,
+        "is_anomalous": true
+      },
+      "4": {
+        "outlier_days": 10,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0,
+        "is_anomalous": true
+      },
+      "5": {
+        "outlier_days": 14,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0001,
+        "is_anomalous": true
+      },
+      "6": {
+        "outlier_days": 28,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.2268,
+        "is_anomalous": false
+      },
+      "7": {
+        "outlier_days": 15,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0001,
+        "is_anomalous": true
+      },
+      "8": {
+        "outlier_days": 27,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.1667,
+        "is_anomalous": false
+      },
+      "9": {
+        "outlier_days": 27,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.1667,
+        "is_anomalous": false
+      },
+      "10": {
+        "outlier_days": 27,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.1667,
+        "is_anomalous": false
+      },
+      "11": {
+        "outlier_days": 25,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0833,
+        "is_anomalous": false
+      },
+      "12": {
+        "outlier_days": 19,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0032,
+        "is_anomalous": true
+      },
+      "13": {
+        "outlier_days": 32,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.6652,
+        "is_anomalous": false
+      },
+      "14": {
+        "outlier_days": 15,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0001,
+        "is_anomalous": true
+      },
+      "15": {
+        "outlier_days": 22,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0194,
+        "is_anomalous": true
+      },
+      "16": {
+        "outlier_days": 22,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0194,
+        "is_anomalous": true
+      },
+      "17": {
+        "outlier_days": 13,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0,
+        "is_anomalous": true
+      },
+      "18": {
+        "outlier_days": 3,
+        "expected_outlier_days": 35.2,
+        "p_value": 0.0,
+        "is_anomalous": true
+      }
+    },
+    "total_outlier_instances": 303
+  }
+}
