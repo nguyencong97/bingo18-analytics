@@ -65,7 +65,7 @@ def run_crawler() -> int:
         if gas_url:
             try:
                 new_records = [r for r in valid_records if r["draw_id"] in new_ids]
-                httpx.post(gas_url, json={"records": new_records}, timeout=15)
+                httpx.post(gas_url, json={"records": new_records}, timeout=15, follow_redirects=True)
                 logger.info(f"Đã đồng bộ {len(new_records)} kỳ sang Google Sheet thành công.")
             except Exception as e:
                 logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")
