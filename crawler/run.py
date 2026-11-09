@@ -3,7 +3,9 @@
 from datetime import datetime
 from pathlib import Path
 import logging
+import os
 import sys
+import httpx
 
 from crawler.client import VietlottClient
 from crawler.parser import parse_ajaxpro_html_content, parse_draw_rows
@@ -59,6 +61,14 @@ def run_crawler() -> int:
         logger.info(f"Đã lưu thành công: {msg}")
         print(msg)
         send_telegram_alert(f"🎯 <b>Cập nhật kết quả mới</b>: +{count_new} kỳ (Mã kỳ {first_id}..{last_id})")
+        gas_url = os.environ.get("GAS_WEBAPP_URL")
+        if gas_url:
+            try:
+                new_records = [r for r in valid_records if r["draw_id"] in new_ids]
+                httpx.post(gas_url, json={"records": new_records}, timeout=15)
+                logger.info(f"Đã đồng bộ {len(new_records)} kỳ sang Google Sheet thành công.")
+            except Exception as e:
+                logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")
     else:
         logger.info("Không có kỳ quay mới nào cần cập nhật.")
 

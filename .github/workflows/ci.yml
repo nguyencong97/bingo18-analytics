@@ -23,8 +23,10 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Run automated acceptance tests
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v
 
       - name: Verify data integrity
         run: |

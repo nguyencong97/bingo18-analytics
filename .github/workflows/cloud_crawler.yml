@@ -47,7 +47,7 @@ jobs:
           if git status --porcelain | grep -qE "data/|results/|web/public/results/"; then
             git add data/ results/ web/public/results/
             git commit -m "data(auto): live update draws $(date +'%Y-%m-%d %H:%M')"
-            git push origin master
+            git push origin main
           else
             echo "Không có dữ liệu mới cần commit."
           fi
