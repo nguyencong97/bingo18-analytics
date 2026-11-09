@@ -2,6 +2,6 @@
   "name": "bingo18-analytics-root",
   "private": true,
   "scripts": {
-    "build": "npm --prefix web install && npm --prefix web run build"
+    "build": "cd web && npm install && npm run build && cd .. && node -e \"const fs=require('fs'); fs.cpSync('web/dist', 'dist', {recursive: true});\""
   }
 }

@@ -1,11 +1,10 @@
 {
-  "buildCommand": "npm --prefix web install && npm --prefix web run build",
-  "outputDirectory": "web/dist",
-  "framework": "vite",
+  "buildCommand": "cd web && npm install && npm run build && cd .. && node -e \"const fs=require('fs'); fs.cpSync('web/dist', 'dist', {recursive: true});\"",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
   ]
 }
