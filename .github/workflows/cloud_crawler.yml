@@ -10,6 +10,9 @@ concurrency:
   group: bingo18-crawler
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   crawl-and-sync:
     runs-on: ubuntu-latest
