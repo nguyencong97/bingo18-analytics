@@ -23,12 +23,11 @@ CSV_HEADER = [
 
 
 def compute_file_sha256(file_path: Path) -> str:
-    """Tính mã băm SHA-256 của tệp tin."""
-    h = hashlib.sha256()
+    """Tính mã băm SHA-256 của tệp tin (chuẩn hóa LF để độc lập nền tảng Windows/Linux)."""
     with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            h.update(chunk)
-    return h.hexdigest()
+        content = f.read()
+    normalized = content.replace(b"\r\n", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def update_checksums(data_dir: Path, monthly_files: List[Path]) -> None:
