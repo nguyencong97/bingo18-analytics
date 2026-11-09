@@ -1,0 +1,12 @@
+[Unit]
+Description=Bingo18 Analytics Data Crawler Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=bingo18
+WorkingDirectory=/opt/bingo18
+ExecStart=/opt/bingo18/scripts/run.sh
+StandardOutput=journal
+StandardError=journal
+Restart=no
