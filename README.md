@@ -1,6 +1,13 @@
 # Bingo18 Analytics (Vietlott)
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnguyencong97%2Fbingo18-analytics)
+
 Hệ thống thu thập dữ liệu thật 100% từ Vietlott Bingo18, lưu trữ tệp phẳng CSV (không database), phân tích thống kê và kiểm định khoa học (M1–M16) với giả thuyết vô hiệu $H_0$ (máy quay công bằng, các kỳ độc lập), mô phỏng null đối chứng và giao diện trực quan hóa tiếng Việt.
+
+---
+
+## 🚀 Triển Khai Nhanh Lên Vercel (1-Click)
+Bấm vào nút **Deploy with Vercel** ở trên hoặc truy cập [Vercel New Project](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnguyencong97%2Fbingo18-analytics) để xuất bản trang web Dashboard trực quan hoàn toàn miễn phí trong 30 giây (tên miền dạng `https://bingo18-analytics.vercel.app`).
 
 ---
 

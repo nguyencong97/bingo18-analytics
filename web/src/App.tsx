@@ -31,11 +31,14 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   useEffect(() => {
+    const base = import.meta.env.BASE_URL.endsWith("/")
+      ? import.meta.env.BASE_URL
+      : `${import.meta.env.BASE_URL}/`;
     Promise.all([
-      fetch("/results/all_stats_real.json").then((r) => r.json()),
-      fetch("/results/m14_null_simulation.json").then((r) => r.json()),
-      fetch("/results/m15_ev.json").then((r) => r.json()),
-      fetch("/results/m16_backtest.json").then((r) => r.json()),
+      fetch(`${base}results/all_stats_real.json`).then((r) => r.json()),
+      fetch(`${base}results/m14_null_simulation.json`).then((r) => r.json()),
+      fetch(`${base}results/m15_ev.json`).then((r) => r.json()),
+      fetch(`${base}results/m16_backtest.json`).then((r) => r.json()),
     ])
       .then(([statsJson, simJson, evJson, btJson]) => {
         setAllStats(statsJson);

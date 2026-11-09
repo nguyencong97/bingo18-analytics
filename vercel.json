@@ -1,5 +1,11 @@
 {
-  "buildCommand": "cd web && npm install && npm run build",
+  "buildCommand": "npm --prefix web run build",
+  "installCommand": "npm --prefix web install",
   "outputDirectory": "web/dist",
-  "framework": "vite"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }
