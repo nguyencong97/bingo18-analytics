@@ -8,6 +8,7 @@ import sys
 from crawler.client import VietlottClient
 from crawler.parser import parse_ajaxpro_html_content, parse_draw_rows
 from crawler.storage import DataStorage
+from crawler.alerts import send_telegram_alert
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,6 +58,7 @@ def run_crawler() -> int:
         msg = f"data: +{count_new} draws (id {first_id}..{last_id})"
         logger.info(f"Đã lưu thành công: {msg}")
         print(msg)
+        send_telegram_alert(f"🎯 <b>Cập nhật kết quả mới</b>: +{count_new} kỳ (Mã kỳ {first_id}..{last_id})")
     else:
         logger.info("Không có kỳ quay mới nào cần cập nhật.")
 
