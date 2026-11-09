@@ -1,0 +1,28 @@
+{
+  "crawler": {
+    "url": "https://vietlott.vn/ajaxpro/Vietlott.PlugIn.WebParts.GameBingoCompareWebPart,Vietlott.PlugIn.WebParts.ashx",
+    "timeout_seconds": 20,
+    "max_retries": 3,
+    "backoff_factor": 1.5,
+    "rate_limit_per_hour": 20,
+    "user_agent": "Bingo18Analytics/1.0 (+https://github.com/vietlot; contact@bingo18analytics.local)"
+  },
+  "regime": {
+    "shift_threshold_pct": 20.0,
+    "min_sustained_days": 7
+  },
+  "stats": {
+    "fdr_alpha": 0.05,
+    "confidence_level": 0.95,
+    "cusum_window": 5000,
+    "cusum_step": 500,
+    "simulation_runs": 1000,
+    "simulation_seed": 20261109
+  },
+  "google_sheet": {
+    "doc_id": "1-A-ssc7nxooZMDjYrz8v-EBsjUex24g18TjOjVDFyL0",
+    "chi_tiet_gid": "1029885527",
+    "loc_1_gid": "436564500",
+    "loc_2_gid": "1468763569"
+  }
+}
