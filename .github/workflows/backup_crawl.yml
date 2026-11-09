@@ -1,0 +1,40 @@
+name: Backup Crawler
+
+on:
+  schedule:
+    # Chạy dự phòng mỗi 6 giờ để bù các kỳ thiếu
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Crawler
+        run: |
+          python -m crawler.run
+
+      - name: Check data integrity
+        run: |
+          python -m stats.integrity
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if git status --porcelain | grep -q "data/"; then
+            git add data/
+            git commit -m "data(auto): backup crawl update draws $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi

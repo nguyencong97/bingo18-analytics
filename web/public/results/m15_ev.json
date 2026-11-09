@@ -1,0 +1,186 @@
+{
+  "verified": false,
+  "warning": "CẢNH BÁO: Bảng hệ số thưởng chưa được người dùng xác minh chính thức. Kết quả chỉ mang tính tham khảo.",
+  "ticket_price": 10000,
+  "bets": {
+    "sum": {
+      "3": {
+        "sum": 3,
+        "prob": 0.00463,
+        "multiplier": 120.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.008333
+      },
+      "4": {
+        "sum": 4,
+        "prob": 0.013889,
+        "multiplier": 40.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.025
+      },
+      "5": {
+        "sum": 5,
+        "prob": 0.027778,
+        "multiplier": 20.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.05
+      },
+      "6": {
+        "sum": 6,
+        "prob": 0.046296,
+        "multiplier": 12.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.083333
+      },
+      "7": {
+        "sum": 7,
+        "prob": 0.069444,
+        "multiplier": 8.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.125
+      },
+      "8": {
+        "sum": 8,
+        "prob": 0.097222,
+        "multiplier": 5.5,
+        "expected_value": -0.4653,
+        "rtp_pct": 53.47,
+        "house_edge_pct": 46.53,
+        "breakeven_prob": 0.181818
+      },
+      "9": {
+        "sum": 9,
+        "prob": 0.115741,
+        "multiplier": 4.7,
+        "expected_value": -0.456,
+        "rtp_pct": 54.4,
+        "house_edge_pct": 45.6,
+        "breakeven_prob": 0.212766
+      },
+      "10": {
+        "sum": 10,
+        "prob": 0.125,
+        "multiplier": 4.4,
+        "expected_value": -0.45,
+        "rtp_pct": 55.0,
+        "house_edge_pct": 45.0,
+        "breakeven_prob": 0.227273
+      },
+      "11": {
+        "sum": 11,
+        "prob": 0.125,
+        "multiplier": 4.4,
+        "expected_value": -0.45,
+        "rtp_pct": 55.0,
+        "house_edge_pct": 45.0,
+        "breakeven_prob": 0.227273
+      },
+      "12": {
+        "sum": 12,
+        "prob": 0.115741,
+        "multiplier": 4.7,
+        "expected_value": -0.456,
+        "rtp_pct": 54.4,
+        "house_edge_pct": 45.6,
+        "breakeven_prob": 0.212766
+      },
+      "13": {
+        "sum": 13,
+        "prob": 0.097222,
+        "multiplier": 5.5,
+        "expected_value": -0.4653,
+        "rtp_pct": 53.47,
+        "house_edge_pct": 46.53,
+        "breakeven_prob": 0.181818
+      },
+      "14": {
+        "sum": 14,
+        "prob": 0.069444,
+        "multiplier": 8.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.125
+      },
+      "15": {
+        "sum": 15,
+        "prob": 0.046296,
+        "multiplier": 12.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.083333
+      },
+      "16": {
+        "sum": 16,
+        "prob": 0.027778,
+        "multiplier": 20.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.05
+      },
+      "17": {
+        "sum": 17,
+        "prob": 0.013889,
+        "multiplier": 40.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.025
+      },
+      "18": {
+        "sum": 18,
+        "prob": 0.00463,
+        "multiplier": 120.0,
+        "expected_value": -0.4444,
+        "rtp_pct": 55.56,
+        "house_edge_pct": 44.44,
+        "breakeven_prob": 0.008333
+      }
+    },
+    "big_small_draw": {
+      "small": {
+        "name": "small",
+        "prob": 0.375,
+        "multiplier": 1.5,
+        "expected_value": -0.4375,
+        "rtp_pct": 56.25,
+        "house_edge_pct": 43.75
+      },
+      "draw": {
+        "name": "draw",
+        "prob": 0.25,
+        "multiplier": 2.0,
+        "expected_value": -0.5,
+        "rtp_pct": 50.0,
+        "house_edge_pct": 50.0
+      },
+      "big": {
+        "name": "big",
+        "prob": 0.375,
+        "multiplier": 1.5,
+        "expected_value": -0.4375,
+        "rtp_pct": 56.25,
+        "house_edge_pct": 43.75
+      }
+    },
+    "any_triple": {
+      "prob": 0.027778,
+      "multiplier": 20.0,
+      "expected_value": -0.4444,
+      "rtp_pct": 55.56,
+      "house_edge_pct": 44.44
+    }
+  }
+}
