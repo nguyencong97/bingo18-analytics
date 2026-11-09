@@ -1,0 +1,1448 @@
+{
+  "label": "MÔ PHỎNG",
+  "seed": 20261109,
+  "num_simulations": 1000,
+  "real_n": 99561,
+  "real_chi2_sum": 7.9668,
+  "empirical_p_value": 0.92807,
+  "extreme_count": 928,
+  "sim_chi2_quantiles": {
+    "p50": 14.164012758868544,
+    "p90": 22.346285346958854,
+    "p95": 25.485293466891125,
+    "p99": 31.771975984859314
+  },
+  "sample_1day_simulated": [
+    {
+      "slot": 1,
+      "d1": 4,
+      "d2": 4,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 2,
+      "d1": 2,
+      "d2": 2,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 3,
+      "d1": 1,
+      "d2": 3,
+      "d3": 2,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 4,
+      "d1": 2,
+      "d2": 6,
+      "d3": 1,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 5,
+      "d1": 6,
+      "d2": 1,
+      "d3": 6,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 6,
+      "d1": 2,
+      "d2": 3,
+      "d3": 6,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 7,
+      "d1": 6,
+      "d2": 6,
+      "d3": 5,
+      "total": 17,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 8,
+      "d1": 6,
+      "d2": 6,
+      "d3": 6,
+      "total": 18,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 9,
+      "d1": 3,
+      "d2": 3,
+      "d3": 2,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 10,
+      "d1": 6,
+      "d2": 4,
+      "d3": 3,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 11,
+      "d1": 5,
+      "d2": 2,
+      "d3": 1,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 12,
+      "d1": 5,
+      "d2": 5,
+      "d3": 6,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 13,
+      "d1": 1,
+      "d2": 3,
+      "d3": 5,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 14,
+      "d1": 1,
+      "d2": 6,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 15,
+      "d1": 4,
+      "d2": 6,
+      "d3": 6,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 16,
+      "d1": 6,
+      "d2": 6,
+      "d3": 5,
+      "total": 17,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 17,
+      "d1": 2,
+      "d2": 4,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 18,
+      "d1": 5,
+      "d2": 3,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 19,
+      "d1": 1,
+      "d2": 2,
+      "d3": 6,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 20,
+      "d1": 2,
+      "d2": 4,
+      "d3": 4,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 21,
+      "d1": 3,
+      "d2": 1,
+      "d3": 3,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 22,
+      "d1": 5,
+      "d2": 2,
+      "d3": 1,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 23,
+      "d1": 5,
+      "d2": 3,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 24,
+      "d1": 5,
+      "d2": 3,
+      "d3": 3,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 25,
+      "d1": 3,
+      "d2": 5,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 26,
+      "d1": 4,
+      "d2": 5,
+      "d3": 6,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 27,
+      "d1": 2,
+      "d2": 3,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 28,
+      "d1": 3,
+      "d2": 2,
+      "d3": 4,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 29,
+      "d1": 5,
+      "d2": 3,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 30,
+      "d1": 6,
+      "d2": 2,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 31,
+      "d1": 3,
+      "d2": 3,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 32,
+      "d1": 2,
+      "d2": 3,
+      "d3": 3,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 33,
+      "d1": 1,
+      "d2": 4,
+      "d3": 6,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 34,
+      "d1": 5,
+      "d2": 6,
+      "d3": 6,
+      "total": 17,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 35,
+      "d1": 1,
+      "d2": 3,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 36,
+      "d1": 1,
+      "d2": 6,
+      "d3": 6,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 37,
+      "d1": 1,
+      "d2": 3,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 38,
+      "d1": 2,
+      "d2": 4,
+      "d3": 2,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 39,
+      "d1": 6,
+      "d2": 2,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 40,
+      "d1": 2,
+      "d2": 6,
+      "d3": 1,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 41,
+      "d1": 6,
+      "d2": 2,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 42,
+      "d1": 3,
+      "d2": 4,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 43,
+      "d1": 5,
+      "d2": 6,
+      "d3": 5,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 44,
+      "d1": 3,
+      "d2": 5,
+      "d3": 3,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 45,
+      "d1": 4,
+      "d2": 6,
+      "d3": 4,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 46,
+      "d1": 3,
+      "d2": 5,
+      "d3": 2,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 47,
+      "d1": 2,
+      "d2": 1,
+      "d3": 3,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 48,
+      "d1": 3,
+      "d2": 2,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 49,
+      "d1": 4,
+      "d2": 1,
+      "d3": 3,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 50,
+      "d1": 4,
+      "d2": 3,
+      "d3": 1,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 51,
+      "d1": 1,
+      "d2": 6,
+      "d3": 6,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 52,
+      "d1": 4,
+      "d2": 1,
+      "d3": 4,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 53,
+      "d1": 1,
+      "d2": 5,
+      "d3": 6,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 54,
+      "d1": 4,
+      "d2": 3,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 55,
+      "d1": 1,
+      "d2": 3,
+      "d3": 2,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 56,
+      "d1": 4,
+      "d2": 1,
+      "d3": 4,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 57,
+      "d1": 6,
+      "d2": 5,
+      "d3": 6,
+      "total": 17,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 58,
+      "d1": 2,
+      "d2": 6,
+      "d3": 6,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 59,
+      "d1": 2,
+      "d2": 3,
+      "d3": 3,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 60,
+      "d1": 4,
+      "d2": 4,
+      "d3": 2,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 61,
+      "d1": 3,
+      "d2": 5,
+      "d3": 1,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 62,
+      "d1": 4,
+      "d2": 4,
+      "d3": 2,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 63,
+      "d1": 3,
+      "d2": 1,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 64,
+      "d1": 1,
+      "d2": 2,
+      "d3": 4,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 65,
+      "d1": 5,
+      "d2": 2,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 66,
+      "d1": 3,
+      "d2": 4,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 67,
+      "d1": 5,
+      "d2": 5,
+      "d3": 2,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 68,
+      "d1": 5,
+      "d2": 2,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 69,
+      "d1": 6,
+      "d2": 4,
+      "d3": 6,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 70,
+      "d1": 5,
+      "d2": 1,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 71,
+      "d1": 2,
+      "d2": 2,
+      "d3": 2,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 72,
+      "d1": 2,
+      "d2": 1,
+      "d3": 4,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 73,
+      "d1": 2,
+      "d2": 3,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 74,
+      "d1": 3,
+      "d2": 5,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 75,
+      "d1": 1,
+      "d2": 3,
+      "d3": 5,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 76,
+      "d1": 5,
+      "d2": 4,
+      "d3": 1,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 77,
+      "d1": 3,
+      "d2": 2,
+      "d3": 4,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 78,
+      "d1": 3,
+      "d2": 6,
+      "d3": 3,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 79,
+      "d1": 2,
+      "d2": 4,
+      "d3": 1,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 80,
+      "d1": 1,
+      "d2": 6,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 81,
+      "d1": 1,
+      "d2": 3,
+      "d3": 6,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 82,
+      "d1": 2,
+      "d2": 6,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 83,
+      "d1": 4,
+      "d2": 5,
+      "d3": 5,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 84,
+      "d1": 1,
+      "d2": 1,
+      "d3": 6,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 85,
+      "d1": 3,
+      "d2": 4,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 86,
+      "d1": 1,
+      "d2": 4,
+      "d3": 3,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 87,
+      "d1": 3,
+      "d2": 5,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 88,
+      "d1": 2,
+      "d2": 2,
+      "d3": 3,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 89,
+      "d1": 4,
+      "d2": 3,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 90,
+      "d1": 1,
+      "d2": 1,
+      "d3": 1,
+      "total": 3,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 91,
+      "d1": 3,
+      "d2": 2,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 92,
+      "d1": 2,
+      "d2": 5,
+      "d3": 4,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 93,
+      "d1": 1,
+      "d2": 4,
+      "d3": 1,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 94,
+      "d1": 6,
+      "d2": 5,
+      "d3": 5,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 95,
+      "d1": 4,
+      "d2": 3,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 96,
+      "d1": 5,
+      "d2": 5,
+      "d3": 4,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 97,
+      "d1": 2,
+      "d2": 3,
+      "d3": 3,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 98,
+      "d1": 3,
+      "d2": 6,
+      "d3": 3,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 99,
+      "d1": 1,
+      "d2": 4,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 100,
+      "d1": 5,
+      "d2": 1,
+      "d3": 6,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 101,
+      "d1": 2,
+      "d2": 5,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 102,
+      "d1": 4,
+      "d2": 3,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 103,
+      "d1": 3,
+      "d2": 2,
+      "d3": 6,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 104,
+      "d1": 3,
+      "d2": 3,
+      "d3": 1,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 105,
+      "d1": 6,
+      "d2": 1,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 106,
+      "d1": 4,
+      "d2": 4,
+      "d3": 2,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 107,
+      "d1": 1,
+      "d2": 3,
+      "d3": 2,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 108,
+      "d1": 2,
+      "d2": 2,
+      "d3": 5,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 109,
+      "d1": 6,
+      "d2": 3,
+      "d3": 4,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 110,
+      "d1": 6,
+      "d2": 6,
+      "d3": 3,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 111,
+      "d1": 1,
+      "d2": 6,
+      "d3": 6,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 112,
+      "d1": 1,
+      "d2": 2,
+      "d3": 6,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 113,
+      "d1": 3,
+      "d2": 5,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 114,
+      "d1": 1,
+      "d2": 6,
+      "d3": 4,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 115,
+      "d1": 6,
+      "d2": 2,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 116,
+      "d1": 3,
+      "d2": 3,
+      "d3": 4,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 117,
+      "d1": 5,
+      "d2": 5,
+      "d3": 1,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 118,
+      "d1": 1,
+      "d2": 2,
+      "d3": 2,
+      "total": 5,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 119,
+      "d1": 6,
+      "d2": 2,
+      "d3": 4,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 120,
+      "d1": 4,
+      "d2": 3,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 121,
+      "d1": 6,
+      "d2": 1,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 122,
+      "d1": 4,
+      "d2": 2,
+      "d3": 4,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 123,
+      "d1": 6,
+      "d2": 2,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 124,
+      "d1": 2,
+      "d2": 2,
+      "d3": 1,
+      "total": 5,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 125,
+      "d1": 4,
+      "d2": 2,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 126,
+      "d1": 4,
+      "d2": 5,
+      "d3": 5,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 127,
+      "d1": 2,
+      "d2": 5,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 128,
+      "d1": 6,
+      "d2": 3,
+      "d3": 4,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 129,
+      "d1": 5,
+      "d2": 1,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 130,
+      "d1": 6,
+      "d2": 2,
+      "d3": 6,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 131,
+      "d1": 1,
+      "d2": 3,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 132,
+      "d1": 4,
+      "d2": 6,
+      "d3": 5,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 133,
+      "d1": 1,
+      "d2": 6,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 134,
+      "d1": 4,
+      "d2": 4,
+      "d3": 5,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 135,
+      "d1": 2,
+      "d2": 3,
+      "d3": 6,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 136,
+      "d1": 5,
+      "d2": 1,
+      "d3": 1,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 137,
+      "d1": 6,
+      "d2": 1,
+      "d3": 5,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 138,
+      "d1": 4,
+      "d2": 6,
+      "d3": 5,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 139,
+      "d1": 2,
+      "d2": 3,
+      "d3": 5,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 140,
+      "d1": 3,
+      "d2": 4,
+      "d3": 2,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 141,
+      "d1": 6,
+      "d2": 3,
+      "d3": 4,
+      "total": 13,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 142,
+      "d1": 5,
+      "d2": 5,
+      "d3": 2,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 143,
+      "d1": 3,
+      "d2": 3,
+      "d3": 6,
+      "total": 12,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 144,
+      "d1": 1,
+      "d2": 3,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 145,
+      "d1": 2,
+      "d2": 4,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 146,
+      "d1": 3,
+      "d2": 1,
+      "d3": 5,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 147,
+      "d1": 6,
+      "d2": 5,
+      "d3": 4,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 148,
+      "d1": 2,
+      "d2": 4,
+      "d3": 3,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 149,
+      "d1": 6,
+      "d2": 6,
+      "d3": 4,
+      "total": 16,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 150,
+      "d1": 6,
+      "d2": 1,
+      "d3": 4,
+      "total": 11,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 151,
+      "d1": 4,
+      "d2": 6,
+      "d3": 4,
+      "total": 14,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 152,
+      "d1": 3,
+      "d2": 2,
+      "d3": 4,
+      "total": 9,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 153,
+      "d1": 3,
+      "d2": 2,
+      "d3": 2,
+      "total": 7,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 154,
+      "d1": 2,
+      "d2": 1,
+      "d3": 1,
+      "total": 4,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 155,
+      "d1": 3,
+      "d2": 6,
+      "d3": 6,
+      "total": 15,
+      "label": "MÔ PHỎNG",
+      "classification": "Lớn"
+    },
+    {
+      "slot": 156,
+      "d1": 2,
+      "d2": 2,
+      "d3": 4,
+      "total": 8,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 157,
+      "d1": 6,
+      "d2": 1,
+      "d3": 3,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    },
+    {
+      "slot": 158,
+      "d1": 1,
+      "d2": 4,
+      "d3": 1,
+      "total": 6,
+      "label": "MÔ PHỎNG",
+      "classification": "Nhỏ"
+    },
+    {
+      "slot": 159,
+      "d1": 3,
+      "d2": 6,
+      "d3": 1,
+      "total": 10,
+      "label": "MÔ PHỎNG",
+      "classification": "Hòa"
+    }
+  ]
+}
