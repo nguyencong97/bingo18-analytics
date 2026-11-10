@@ -4,7 +4,7 @@
     "total_draws": 99701,
     "version": "1.0.0",
     "seed": 20261109,
-    "computed_at": "2026-11-10T20:04:03.223253"
+    "computed_at": "2026-11-10T20:26:09.629422"
   },
   "m1_m2_distribution": {
     "n": 99701,
@@ -638,7 +638,7 @@
       "expected_mean_gap": 216.0,
       "max_gap": 1209,
       "ks_statistic": 0.0428,
-      "ks_p_value": 0.3575624699081754,
+      "ks_p_value": 0.35756246990817864,
       "is_geometric": true
     },
     "4": {
@@ -648,7 +648,7 @@
       "expected_mean_gap": 72.0,
       "max_gap": 468,
       "ks_statistic": 0.0437,
-      "ks_p_value": 0.011680442733195759,
+      "ks_p_value": 0.011680442733195835,
       "is_geometric": false
     },
     "5": {
@@ -678,7 +678,7 @@
       "expected_mean_gap": 14.4,
       "max_gap": 124,
       "ks_statistic": 0.0694,
-      "ks_p_value": 3.5772062056158297e-29,
+      "ks_p_value": 3.5772062056157355e-29,
       "is_geometric": false
     },
     "8": {
@@ -748,7 +748,7 @@
       "expected_mean_gap": 14.4,
       "max_gap": 113,
       "ks_statistic": 0.0694,
-      "ks_p_value": 1.1121284430736657e-29,
+      "ks_p_value": 1.1121284430736358e-29,
       "is_geometric": false
     },
     "15": {
@@ -778,7 +778,7 @@
       "expected_mean_gap": 72.0,
       "max_gap": 562,
       "ks_statistic": 0.0305,
-      "ks_p_value": 0.14580429507238812,
+      "ks_p_value": 0.14580429507239123,
       "is_geometric": true
     },
     "18": {
@@ -788,7 +788,7 @@
       "expected_mean_gap": 216.0,
       "max_gap": 1564,
       "ks_statistic": 0.0524,
-      "ks_p_value": 0.1727704035196843,
+      "ks_p_value": 0.1727704035196863,
       "is_geometric": true
     }
   },
