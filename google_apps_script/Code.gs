@@ -2,12 +2,15 @@
  * =========================================================================
  * BINGO18 ANALYTICS PRO - HỆ THỐNG ĐÁM MÂY TỰ ĐỘNG 24/7 & DỰ ĐOÁN M16
  * =========================================================================
- * Cập nhật chuẩn hóa:
- * 1. Bóc tách trực tiếp Vietlott AjaxPro bằng regex thẻ span.bong_tron_bingo
- * 2. Cố định chuẩn 9 cột dữ liệu (Mã kỳ đến Bộ số), loại bỏ hoàn toàn cột thừa
- * 3. Nút 1-click '🧹 Chuẩn hóa dữ liệu Sheet Chi tiết' đồng bộ kiểu dữ liệu toàn bộ dòng
+ * Tính năng chính:
+ * 1. Bóc tách trực tiếp Vietlott AjaxPro bằng regex span.bong_tron_bingo
+ * 2. Cố định chuẩn 9 cột dữ liệu (Mã kỳ đến Bộ số), loại bỏ cột thừa
+ * 3. Nút 1-click '🧹 Chuẩn hóa dữ liệu Sheet Chi tiết' đồng bộ kiểu dữ liệu
  * 4. Tự động hóa 24/7 (Time-driven Trigger mỗi 10 phút, 06:00 - 22:15 VN)
- * 5. Bảng Thống kê & Biểu đồ nhúng + Bảng Dự đoán hàng ngày M16
+ * 5. Bảng Thống kê & Biểu đồ nhúng đa khung thời gian (Hôm nay, Tuần này, Tuần trước)
+ * 6. Bảng Dự đoán Hợp nhất M16 (Markov, Bayes, Hot-500, H0)
+ * 7. BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY (Xúc xắc 1-2-3, Tổng dự đoán, Đối chiếu thực tế, Tỉ lệ trong ngày)
+ * 8. Tự động đồng bộ khi có thay đổi (autoSyncJob, doPost webhook, và trigger onEdit)
  */
 
 // -------------------------------------------------------------------------
@@ -28,7 +31,7 @@ function onOpen() {
 }
 
 // -------------------------------------------------------------------------
-// 2. TỰ ĐỘNG HÓA 24/7 (TIME-DRIVEN TRIGGER)
+// 2. TỰ ĐỘNG HÓA 24/7 (TIME-DRIVEN TRIGGER & ONEDIT TRIGGER)
 // -------------------------------------------------------------------------
 function installAutoJob() {
   removeAutoJobQuietly();
@@ -44,6 +47,7 @@ function installAutoJob() {
     "✅ Tự động hóa 24/7 đã kích hoạt thành công!\n\n" +
     "- Tần suất: Cứ mỗi 10 phút hệ thống sẽ tự động kéo các kỳ quay mới về.\n" +
     "- Khung giờ: 06:00 đến 22:15 giờ Việt Nam (ngoài giờ này job tự nghỉ để tiết kiệm quota).\n" +
+    "- Tự động đồng bộ: Cả 2 sheet Thống kê và Dự đoán sẽ tự động cập nhật ngay khi có kỳ mới!\n" +
     "- Hệ thống chạy ngầm vĩnh viễn trên đám mây của Google, bạn không cần mở máy hay thao tác gì nữa!"
   );
 }
@@ -68,12 +72,34 @@ function manualRunAll() {
   setupPredictionSheet();
 }
 
+/**
+ * Trigger tự động khi người dùng chỉnh sửa hoặc dán thêm dữ liệu thủ công vào sheet 'Chi tiết'
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var sheet = e.range.getSheet();
+    if (sheet && sheet.getName() === "Chi tiết") {
+      if (e.range.getRow() >= 2) {
+        updateStatsAndChartsSheet();
+        updatePredictionSheet();
+      }
+    }
+  } catch (err) {
+    Logger.log("onEdit error: " + err);
+  }
+}
+
 // -------------------------------------------------------------------------
 // 3. CHUẨN HÓA ĐỊNH DẠNG SHEET 'CHI TIẾT' (9 CỘT ĐỒNG NHẤT 100%)
 // -------------------------------------------------------------------------
 function standardizeChiTietSheetWithAlert() {
   standardizeChiTietSheet();
-  SpreadsheetApp.getUi().alert("✅ Đã chuẩn hóa thành công sheet 'Chi tiết'!\n\n- Toàn bộ cột đã về đúng 9 cột chuẩn.\n- Kiểu dữ liệu đã được đồng bộ thống nhất: Mã kỳ (text 7 chữ số), Ngày (yyyy-mm-dd), Xúc xắc & Tổng (số nguyên).");
+  SpreadsheetApp.getUi().alert(
+    "✅ Đã chuẩn hóa thành công sheet 'Chi tiết'!\n\n" +
+    "- Toàn bộ cột đã về đúng 9 cột chuẩn.\n" +
+    "- Kiểu dữ liệu đã được đồng bộ thống nhất: Mã kỳ (text 7 chữ số), Ngày (yyyy-mm-dd), Xúc xắc & Tổng (số nguyên)."
+  );
 }
 
 function standardizeChiTietSheet() {
@@ -139,7 +165,6 @@ function autoSyncVietlottJob() {
       for (var i = 0; i < idValues.length; i++) {
         var rawId = String(idValues[i][0]).trim();
         if (rawId) {
-          // Chuẩn hóa thành 7 chữ số để so sánh chính xác
           var cleanId = rawId.replace("#", "").padStart(7, "0");
           existingIds[cleanId] = true;
           existingIds[rawId] = true;
@@ -153,12 +178,11 @@ function autoSyncVietlottJob() {
       var r = newRecords[j];
       var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
       if (rId && !existingIds[rId]) {
-        // ĐÚNG 9 CỘT CHUẨN, KHÔNG THÊM CỘT THỨ 10
         toAppend.push([
           rId,
           r.date,
           r.time || "",
-          r.slot_in_day || 0,
+          Number(r.slot_in_day || 0),
           Number(r.d1),
           Number(r.d2),
           Number(r.d3),
@@ -170,12 +194,11 @@ function autoSyncVietlottJob() {
     }
 
     if (toAppend.length > 0) {
-      // Sắp xếp mã kỳ tăng dần
       toAppend.sort(function(a, b) { return String(a[0]).localeCompare(String(b[0])); });
       sheet.getRange(sheet.getLastRow() + 1, 1, toAppend.length, 9).setValues(toAppend);
       Logger.log("Đã thêm thành công " + toAppend.length + " kỳ quay mới vào sheet Chi tiết.");
 
-      // Cập nhật lại 2 sheet Thống kê và Dự đoán
+      // Tự động làm mới cả 2 sheet Thống kê và Dự đoán
       updateStatsAndChartsSheet();
       updatePredictionSheet();
     } else {
@@ -283,7 +306,6 @@ function parseCsvToRecords(csvContent) {
   var records = [];
   var header = lines[0];
 
-  // Nhận diện linh hoạt chỉ mục các cột
   var idxId = 0, idxDate = 1, idxTime = 2, idxSlot = 3, idxD1 = 4, idxD2 = 5, idxD3 = 6, idxTot = 7, idxRes = 8;
   if (header.indexOf("draw_id") !== -1) {
     idxId = header.indexOf("draw_id");
@@ -324,6 +346,62 @@ function parseCsvToRecords(csvContent) {
 // -------------------------------------------------------------------------
 var THEORETICAL_WAYS = [1, 3, 6, 10, 15, 21, 25, 27, 27, 25, 21, 15, 10, 6, 3, 1];
 
+// Bảng ánh xạ bộ 3 viên xúc xắc tối ưu (có số hoán vị cao nhất) cho từng Tổng
+var BEST_DICE_COMBO = {
+  3: [1, 1, 1],
+  4: [1, 1, 2],
+  5: [1, 1, 3],
+  6: [1, 2, 3],
+  7: [1, 2, 4],
+  8: [1, 3, 4],
+  9: [2, 3, 4],
+  10: [2, 3, 5],
+  11: [2, 4, 5],
+  12: [3, 4, 5],
+  13: [3, 4, 6],
+  14: [3, 5, 6],
+  15: [4, 5, 6],
+  16: [4, 6, 6],
+  17: [5, 6, 6],
+  18: [6, 6, 6]
+};
+
+function formatSlotTime(slot) {
+  var s = Number(slot);
+  if (isNaN(s) || s < 1) s = 1;
+  if (s > 96) s = 96;
+  var totalMins = 6 * 60 + 5 + (s - 1) * 10;
+  var h = Math.floor(totalMins / 60);
+  var m = totalMins % 60;
+  return (h < 10 ? "0" + h : "" + h) + ":" + (m < 10 ? "0" + m : "" + m);
+}
+
+function getDrawTime(timeVal, slotVal, fallbackIndex) {
+  var tStr = String(timeVal || "").trim();
+  if (tStr && tStr.length >= 4 && tStr.indexOf(":") !== -1) return tStr;
+  var s = Number(slotVal || 0);
+  if (s <= 0 && fallbackIndex) s = fallbackIndex;
+  if (s > 0) return formatSlotTime(s);
+  return "--:--";
+}
+
+function extractDateStr(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
+  }
+  var s = String(val).trim();
+  var dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmy) {
+    return dmy[3] + "-" + dmy[2].padStart(2, "0") + "-" + dmy[1].padStart(2, "0");
+  }
+  var ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (ymd) {
+    return ymd[1] + "-" + ymd[2].padStart(2, "0") + "-" + ymd[3].padStart(2, "0");
+  }
+  return s.substring(0, 10);
+}
+
 function setupStatsAndChartsSheet() {
   updateStatsAndChartsSheet();
 }
@@ -352,7 +430,7 @@ function updateStatsAndChartsSheet() {
 
   for (var r = 0; r < rawData.length; r++) {
     var row = rawData[r];
-    var dateVal = String(row[1]).substring(0, 10);
+    var dateVal = extractDateStr(row[1]);
     var d1 = Number(row[4]), d2 = Number(row[5]), d3 = Number(row[6]), tot = Number(row[7]);
     if (tot < 3 || tot > 18) continue;
 
@@ -421,7 +499,7 @@ function updateStatsAndChartsSheet() {
 }
 
 // -------------------------------------------------------------------------
-// 6. SHEET 'DỰ ĐOÁN HÀNG NGÀY' (MÔ HÌNH DỰ BÁO KHOA HỌC M16)
+// 6. SHEET 'DỰ ĐOÁN HÀNG NGÀY' (MÔ HÌNH HỢP NHẤT M16 & BẢNG DỰ ĐOÁN THEO TỪNG KỲ)
 // -------------------------------------------------------------------------
 function setupPredictionSheet() {
   updatePredictionSheet();
@@ -434,29 +512,43 @@ function updatePredictionSheet() {
   var lastRow = dataSheet.getLastRow();
   if (lastRow < 20) return;
 
-  var readCount = Math.min(500, lastRow - 1);
+  var readCount = Math.min(2000, lastRow - 1);
   var rawData = dataSheet.getRange(lastRow - readCount + 1, 1, readCount, 9).getValues();
 
   var historySums = [];
-  var lastDraw = rawData[rawData.length - 1];
+  var lastRowData = rawData[rawData.length - 1];
   for (var i = 0; i < rawData.length; i++) {
     var tot = Number(rawData[i][7]);
     if (tot >= 3 && tot <= 18) historySums.push(tot);
   }
 
   var lastSum = historySums[historySums.length - 1];
-  var lastDrawId = String(lastDraw[0]);
-  var lastResult = String(lastDraw[8]);
+  var lastDrawId = String(lastRowData[0]).replace("#", "").trim().padStart(7, "0");
+  var lastResult = String(lastRowData[8]);
 
+  // Phân phối lý thuyết H0 và tần suất Hot-N
   var pH0 = {}, counts = {}, pMarkov = {};
   for (var s = 3; s <= 18; s++) { pH0[s] = THEORETICAL_WAYS[s - 3] / 216.0; counts[s] = 0; }
   for (var h = 0; h < historySums.length; h++) counts[historySums[h]]++;
 
+  // Ma trận chuyển trạng thái Markov bậc 1
+  var transMatrix = {};
+  for (var f = 3; f <= 18; f++) {
+    transMatrix[f] = {};
+    for (var t = 3; t <= 18; t++) transMatrix[f][t] = 0;
+  }
   var markovTrans = {}, markovTotal = 0;
   for (var s4 = 3; s4 <= 18; s4++) markovTrans[s4] = 0;
+
   for (var m = 0; m < historySums.length - 1; m++) {
-    if (historySums[m] === lastSum) { markovTrans[historySums[m + 1]]++; markovTotal++; }
+    var sFrom = historySums[m];
+    var sTo = historySums[m + 1];
+    if (sFrom >= 3 && sFrom <= 18 && sTo >= 3 && sTo <= 18) {
+      transMatrix[sFrom][sTo]++;
+      if (sFrom === lastSum) { markovTrans[sTo]++; markovTotal++; }
+    }
   }
+
   for (var s5 = 3; s5 <= 18; s5++) {
     pMarkov[s5] = markovTotal >= 5 ? (markovTrans[s5] + 5.0 * pH0[s5]) / (markovTotal + 5.0) : pH0[s5];
   }
@@ -494,6 +586,7 @@ function updatePredictionSheet() {
   sheet.getRange("A2:N2").merge().setValue("Kỳ tham chiếu gần nhất: #" + lastDrawId + " | Kết quả: " + lastResult + " (Tổng " + lastSum + ") | Cập nhật: " + Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"))
     .setFontStyle("italic").setHorizontalAlignment("center");
 
+  // BẢNG 1: XÁC SUẤT HỢP NHẤT 16 TỔNG
   sheet.getRange(4, 1, 1, 9).setValues([["Hạng", "Tổng", "Dự phóng Hợp nhất (%)", "Lý thuyết H0 (%)", "Mô hình Markov (%)", "Mô hình Hot-500 (%)", "Mô hình Bayes (%)", "Độ lệch / H0 (%)", "Khuyến nghị xu hướng"]])
     .setFontWeight("bold").setBackground("#2563EB").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
@@ -504,6 +597,7 @@ function updatePredictionSheet() {
   }
   sheet.getRange(5, 1, 16, 9).setValues(mainRows).setHorizontalAlignment("center");
 
+  // THÔNG TIN BÊN PHẢI: TOP 3 & CỬA CƯỢC
   sheet.getRange("K4:N4").merge().setValue("🎯 TOP 3 TỔNG XÁC SUẤT CAO NHẤT KỲ TIẾP THEO")
     .setFontWeight("bold").setBackground("#D97706").setFontColor("#FFFFFF").setHorizontalAlignment("center");
   sheet.getRange(5, 11, 3, 4).setValues([
@@ -527,6 +621,155 @@ function updatePredictionSheet() {
     ["2. Mọi mô hình dự báo chỉ phản ánh xu hướng phân phối thống kê ngắn hạn."],
     ["3. Không có phương pháp nào đảm bảo 100% chiến thắng. Tuyệt đối không gấp thếp (Martingale)."]
   ]).setFontSize(9).setFontColor("#475569");
+
+  // -----------------------------------------------------------------------
+  // BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (XÚC XẮC 1-2-3, TỔNG, ĐỐI CHIẾU, TỈ LỆ)
+  // -----------------------------------------------------------------------
+  var refDateStr = extractDateStr(lastRowData[1]);
+  var todayDraws = [];
+  var dailyCounts = {};
+  for (var sInit = 3; sInit <= 18; sInit++) dailyCounts[sInit] = 0;
+
+  for (var d = 0; d < rawData.length; d++) {
+    var rowDate = extractDateStr(rawData[d][1]);
+    if (rowDate === refDateStr) {
+      var dTotal = Number(rawData[d][7]);
+      if (dTotal >= 3 && dTotal <= 18) dailyCounts[dTotal]++;
+      todayDraws.push({
+        draw_id: String(rawData[d][0]).replace("#", "").trim().padStart(7, "0"),
+        date: rowDate,
+        time: String(rawData[d][2] || ""),
+        slot: Number(rawData[d][3] || 0),
+        d1: Number(rawData[d][4]),
+        d2: Number(rawData[d][5]),
+        d3: Number(rawData[d][6]),
+        total: dTotal,
+        result: String(rawData[d][8] || "")
+      });
+    }
+  }
+
+  var totalTodayDraws = todayDraws.length;
+
+  // Hàm dự đoán tổng tối ưu dựa trên tổng kỳ trước đó qua ma trận Markov smoothed
+  function getBestPredictedSumForState(priorSum) {
+    if (priorSum >= 3 && priorSum <= 18) {
+      var bestCand = 10, maxScore = -1;
+      for (var cand = 3; cand <= 18; cand++) {
+        var score = transMatrix[priorSum][cand] + 5.0 * (THEORETICAL_WAYS[cand - 3] / 216.0);
+        if (score > maxScore) {
+          maxScore = score;
+          bestCand = cand;
+        }
+      }
+      return bestCand;
+    }
+    return ensembleList[0].sum;
+  }
+
+  // Tiêu đề bảng dự đoán theo từng kỳ
+  sheet.getRange("A22:I22").merge().setValue("🔮 BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (" + refDateStr + ")")
+    .setFontWeight("bold").setFontSize(13).setBackground("#1E293B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange("A23:I23").merge().setValue("Kỳ kế tiếp được gắn nhãn [KỲ TIẾP THEO] ở đầu bảng | Đối chiếu kết quả thực tế & tỉ lệ tổng xuất hiện trong ngày")
+    .setFontStyle("italic").setHorizontalAlignment("center");
+
+  var tableHeaders = [["Mã kỳ", "Giờ quay", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng dự đoán", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Tỉ lệ Tổng trong ngày (%)"]];
+  sheet.getRange(24, 1, 1, 9).setValues(tableHeaders)
+    .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  // DÒNG NỔI BẬT: KỲ TIẾP THEO (UPCOMING DRAW)
+  var nextDrawNum = Number(lastDrawId.replace("#", "")) + 1;
+  var nextDrawId = String(nextDrawNum).padStart(7, "0");
+  var lastSlot = Number(lastRowData[3]) || (todayDraws.length > 0 ? todayDraws[todayDraws.length - 1].slot : 0);
+  if (lastSlot <= 0) lastSlot = todayDraws.length;
+  var nextSlot = lastSlot < 96 ? lastSlot + 1 : 1;
+  var nextTimeStr = formatSlotTime(nextSlot);
+
+  var topPredictedSum = ensembleList[0].sum;
+  var topCombo = BEST_DICE_COMBO[topPredictedSum] || [3, 4, 4];
+  var todayRateForPredicted = totalTodayDraws > 0 ?
+    ((dailyCounts[topPredictedSum] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[topPredictedSum] + "/" + totalTodayDraws + " lần)" : "0%";
+
+  var upcomingRow = [
+    "#" + nextDrawId + " [KỲ TIẾP THEO]",
+    nextTimeStr,
+    topCombo[0],
+    topCombo[1],
+    topCombo[2],
+    topPredictedSum,
+    "⏳ Đang chờ mở thưởng...",
+    "⏳ Chờ kết quả",
+    todayRateForPredicted
+  ];
+
+  sheet.getRange(25, 1, 1, 9).setValues([upcomingRow])
+    .setFontWeight("bold").setBackground("#FEF3C7").setFontColor("#92400E").setHorizontalAlignment("center");
+
+  // CÁC KỲ ĐÃ QUAY TRONG NGÀY (SẮP XẾP TỪ KỲ MỚI NHẤT ĐẾN KỲ CŨ NHẤT)
+  var drawRows = [];
+  var matchColors = [];
+
+  for (var k = todayDraws.length - 1; k >= 0; k--) {
+    var cur = todayDraws[k];
+    var prevTotal = (k > 0) ? todayDraws[k - 1].total : 10;
+    var predSumK = getBestPredictedSumForState(prevTotal);
+    var comboK = BEST_DICE_COMBO[predSumK] || [2, 3, 5];
+
+    var actualDiceStr = cur.d1 + " - " + cur.d2 + " - " + cur.d3 + " (Tổng " + cur.total + ")";
+    var matchText = "";
+    var isHit = (cur.total === predSumK);
+    if (isHit) {
+      matchText = "🎯 Trúng Tổng";
+    } else {
+      var diff = cur.total - predSumK;
+      matchText = "Lệch " + (diff > 0 ? "+" : "") + diff;
+    }
+
+    var dayRateStr = totalTodayDraws > 0 ?
+      ((dailyCounts[cur.total] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[cur.total] + "/" + totalTodayDraws + " lần)" : "0%";
+
+    var drawTimeStr = getDrawTime(cur.time, cur.slot, k + 1);
+
+    drawRows.push([
+      "#" + cur.draw_id,
+      drawTimeStr,
+      comboK[0],
+      comboK[1],
+      comboK[2],
+      predSumK,
+      actualDiceStr,
+      matchText,
+      dayRateStr
+    ]);
+
+    matchColors.push(isHit ? "#15803D" : "#475569");
+  }
+
+  if (drawRows.length > 0) {
+    var range = sheet.getRange(26, 1, drawRows.length, 9);
+    range.setValues(drawRows).setHorizontalAlignment("center");
+    sheet.getRange(26, 1, drawRows.length, 1).setNumberFormat("@");
+
+    // Tô màu nổi bật cột Đối chiếu (Cột H)
+    for (var mIdx = 0; mIdx < matchColors.length; mIdx++) {
+      var cell = sheet.getRange(26 + mIdx, 8);
+      cell.setFontColor(matchColors[mIdx]);
+      if (matchColors[mIdx] === "#15803D") {
+        cell.setFontWeight("bold").setBackground("#DCFCE7");
+      }
+    }
+  }
+
+  // Căn chỉnh độ rộng các cột
+  sheet.setColumnWidth(1, 140); // Mã kỳ
+  sheet.setColumnWidth(2, 90);  // Giờ quay
+  sheet.setColumnWidth(3, 80);  // Xúc xắc 1
+  sheet.setColumnWidth(4, 80);  // Xúc xắc 2
+  sheet.setColumnWidth(5, 80);  // Xúc xắc 3
+  sheet.setColumnWidth(6, 110); // Tổng dự đoán
+  sheet.setColumnWidth(7, 180); // Bộ số thực tế
+  sheet.setColumnWidth(8, 140); // Kết quả đối chiếu
+  sheet.setColumnWidth(9, 160); // Tỉ lệ trong ngày
 }
 
 // -------------------------------------------------------------------------
@@ -534,7 +777,10 @@ function updatePredictionSheet() {
 // -------------------------------------------------------------------------
 function doPost(e) {
   try {
-    if (!e || !e.postData || !e.postData.contents) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "No data" })).setMimeType(ContentService.MimeType.JSON);
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "No data" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
     var payload = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
@@ -546,7 +792,6 @@ function doPost(e) {
       var r = records[i];
       if (r && r.draw_id) {
         var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
-        // CHUẨN ĐÚNG 9 CỘT
         rowsToAppend.push([
           rId,
           r.date || "",
@@ -555,7 +800,7 @@ function doPost(e) {
           Number(r.d1 || 0),
           Number(r.d2 || 0),
           Number(r.d3 || 0),
-          Number(r.total || (Number(r.d1||0)+Number(r.d2||0)+Number(r.d3||0))),
+          Number(r.total || (Number(r.d1||0) + Number(r.d2||0) + Number(r.d3||0))),
           r.result || (r.d1 + " " + r.d2 + " " + r.d3 + " " + r.total)
         ]);
       }
@@ -565,12 +810,15 @@ function doPost(e) {
       updateStatsAndChartsSheet();
       updatePredictionSheet();
     }
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: rowsToAppend.length })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: rowsToAppend.length }))
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", msg: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", msg: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doGet() {
-  return ContentService.createTextOutput("Bingo18 Pro Automation & Prediction System is Active!").setMimeType(ContentService.MimeType.TEXT);
+  return ContentService.createTextOutput("Bingo18 Pro Automation & Prediction System is Active!")
+    .setMimeType(ContentService.MimeType.TEXT);
 }
