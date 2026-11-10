@@ -149,17 +149,14 @@ function repairAndStandardizeChiTietSheet() {
   var lastCol = sheet.getLastColumn();
   if (lastRow < 1) return;
 
-  // 1. Cố định 9 tiêu đề chuẩn
   var headers = [["Mã kỳ", "Ngày quay", "Giờ", "Slot", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng", "Bộ số"]];
   sheet.getRange(1, 1, 1, 9).setValues(headers)
     .setFontWeight("bold").setBackground("#F18806").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  // Xóa sạch các cột thừa ngoài 9 cột
   if (lastCol > 9) {
     sheet.deleteColumns(10, lastCol - 9);
   }
 
-  // 2. Đọc và chuẩn hóa toàn bộ các dòng hiện có
   if (lastRow > 1) {
     var numRows = lastRow - 1;
     var rawValues = sheet.getRange(2, 1, numRows, 9).getValues();
@@ -170,7 +167,6 @@ function repairAndStandardizeChiTietSheet() {
       var rawId = String(row[0]).trim();
       var cleanId = rawId.replace("#", "").trim().padStart(7, "0");
 
-      // Trích xuất ngày chuẩn (loại bỏ chuỗi T00:00:00)
       var col2Str = String(row[1] || "").trim();
       var col3Str = String(row[2] || "").trim();
       var cleanDate = "";
@@ -187,7 +183,6 @@ function repairAndStandardizeChiTietSheet() {
         cleanDate = col2Str.substring(0, 10);
       }
 
-      // Tính Slot và Giờ quay chuẩn
       var slotVal = Number(row[3] || 0);
       var numId = Number(cleanId);
       if (cleanDate === "2026-11-10" && numId >= 195421) {
@@ -198,7 +193,6 @@ function repairAndStandardizeChiTietSheet() {
 
       var cleanTime = formatSlotTime(slotVal);
 
-      // Xúc xắc và Tổng
       var d1 = Number(row[4] || 0);
       var d2 = Number(row[5] || 0);
       var d3 = Number(row[6] || 0);
@@ -218,10 +212,8 @@ function repairAndStandardizeChiTietSheet() {
       ]);
     }
 
-    // Ghi đè toàn bộ dữ liệu sạch vào sheet
     sheet.getRange(2, 1, cleanedRows.length, 9).setValues(cleanedRows);
 
-    // Chuẩn hóa định dạng kiểu dữ liệu
     sheet.getRange(2, 1, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
     sheet.getRange(2, 2, numRows, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
     sheet.getRange(2, 3, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
@@ -324,10 +316,9 @@ function fetchLatestDrawsFromSources(existingIds) {
   var now = new Date();
   var todayStr = Utilities.formatDate(now, "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
 
-  // NGUỒN 1: CỔNG CHÍNH THỨC VIETLOTT AJAXPRO (TỰ ĐỘNG ĐA TRANG)
   try {
     var url = "https://vietlott.vn/ajaxpro/Vietlott.PlugIn.WebParts.GameBingoCompareWebPart,Vietlott.PlugIn.WebParts.ashx";
-    var maxPages = 20; // 20 trang = 120 kỳ quay gần nhất
+    var maxPages = 20;
     var stopPaging = false;
 
     for (var page = 1; page <= maxPages; page++) {
@@ -381,7 +372,6 @@ function fetchLatestDrawsFromSources(existingIds) {
             }
           }
 
-          // Nếu trang chứa kỳ ngày hôm trước và ta đã quét trên 6 trang, dừng quét
           var lastInPage = pageRecords[pageRecords.length - 1];
           if (lastInPage && lastInPage.date < todayStr && page >= 6) {
             stopPaging = true;
@@ -404,7 +394,6 @@ function fetchLatestDrawsFromSources(existingIds) {
     Logger.log("Fetch Vietlott direct failed: " + e);
   }
 
-  // NGUỒN 2: KHO GITHUB DỮ LIỆU THẬT (FALLBACK TỨC THÌ)
   try {
     var ym = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM");
     var ghUrl = "https://raw.githubusercontent.com/nguyencong97/bingo18-analytics/main/data/" + ym + ".csv";
