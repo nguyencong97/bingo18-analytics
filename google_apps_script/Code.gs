@@ -957,13 +957,40 @@ function updatePredictionSheet() {
   todayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
   var totalTodayDraws = todayDraws.length;
 
+  // TÍNH TOÁN GAP THỰC TẾ XUYÊN NGÀY (QUÉT LÙI TỪ KỲ MỚI NHẤT TRONG RAW DATA)
   var currentGaps = {};
-  for (var sg = 3; sg <= 18; sg++) {
-    currentGaps[sg] = (lastSeenSum[sg] === null) ? totalTodayDraws : (totalTodayDraws - 1 - lastSeenSum[sg]);
-  }
   var currentDiceGaps = {};
-  for (var dg = 1; dg <= 6; dg++) {
-    currentDiceGaps[dg] = (lastSeenDice[dg] === null) ? totalTodayDraws : (totalTodayDraws - 1 - lastSeenDice[dg]);
+  for (var sg = 3; sg <= 18; sg++) currentGaps[sg] = rawData.length;
+  for (var dg = 1; dg <= 6; dg++) currentDiceGaps[dg] = rawData.length;
+
+  var foundSums = {};
+  var foundDices = {};
+  var sumsRemaining = 16;
+  var dicesRemaining = 6;
+  var scanCount = 0;
+
+  for (var rIdx = rawData.length - 1; rIdx >= 0; rIdx--) {
+    var rTot = Number(rawData[rIdx][7]);
+    var rd1 = Number(rawData[rIdx][4]);
+    var rd2 = Number(rawData[rIdx][5]);
+    var rd3 = Number(rawData[rIdx][6]);
+
+    if (rTot >= 3 && rTot <= 18) {
+      if (!foundSums[rTot]) {
+        foundSums[rTot] = true;
+        currentGaps[rTot] = scanCount;
+        sumsRemaining--;
+      }
+      [rd1, rd2, rd3].forEach(function(dVal) {
+        if (dVal >= 1 && dVal <= 6 && !foundDices[dVal]) {
+          foundDices[dVal] = true;
+          currentDiceGaps[dVal] = scanCount;
+          dicesRemaining--;
+        }
+      });
+      scanCount++;
+      if (sumsRemaining === 0 && dicesRemaining === 0) break;
+    }
   }
 
   var isLateSession = (totalTodayDraws >= 120);
@@ -1479,54 +1506,78 @@ function updatePredictionSheet() {
   sheet.getRange("N28:S28").merge().setValue("📊 TẦN SUẤT 16 TỔNG & MÁY QUÉT CHUỖI TRỄ (GAP TRACKER)")
     .setFontWeight("bold").setBackground("#065F46").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  var table2Headers = [["Tổng", "Số lượt về", "Tỉ lệ hôm nay (%)", "Chu kỳ chuẩn", "Số kỳ chưa về (Gap)", "Trạng thái nhịp nổ"]];
+  var table2Headers = [["Tổng", "Lượt về", "Tỉ lệ hôm nay (%)", "Chuẩn H0 (Tỉ lệ & Chu kỳ)", "Số kỳ chưa về (Gap)", "Trạng thái nhịp nổ & Quota"]];
   sheet.getRange(29, 14, 1, 6).setValues(table2Headers)
     .setFontWeight("bold").setBackground("#047857").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var sumCompRows = [];
   var trendColors = [];
+  var gapColors = [];
 
   for (var sVal = 3; sVal <= 18; sVal++) {
     var cntVal = dailyCounts[sVal] || 0;
     var actRate = totalVerifiedDraws > 0 ? (cntVal / totalVerifiedDraws) * 100 : 0;
-    var standardCycle = 216.0 / THEORETICAL_WAYS[sVal - 3];
+    var ways = THEORETICAL_WAYS[sVal - 3];
+    var pH0Val = (ways / 216.0) * 100;
+    var standardCycle = 216.0 / ways;
     var gapVal = currentGaps[sVal];
 
     var trText = "Ổn định (Đúng nhịp)";
     var trColor = "#475569";
     var trBg = "#FFFFFF";
 
+    var gapColor = "#475569";
+    var gapBg = "#FFFFFF";
+    var gapBold = false;
+
     if (gapVal >= standardCycle * 1.5) {
-      trText = "🔥 CỰC TRỄ (ĐIỂM NỔ)";
-      trColor = "#DC2626";
-      trBg = "#FEF2F2";
+      var multGap = (gapVal / standardCycle).toFixed(1);
+      trText = "🔥 CỰC TRỄ (" + multGap + "x Chu kỳ)";
+      trColor = "#DC2626"; trBg = "#FEF2F2";
+      gapColor = "#DC2626"; gapBg = "#FEF2F2"; gapBold = true;
     } else if (gapVal >= standardCycle) {
-      trText = "⚠️ Quá hạn chu kỳ";
-      trColor = "#D97706";
-      trBg = "#FFFBEB";
+      trText = "⚠️ Quá hạn (" + gapVal + "/" + standardCycle.toFixed(0) + "k)";
+      trColor = "#D97706"; trBg = "#FFFBEB";
+      gapColor = "#D97706"; gapBg = "#FFFBEB"; gapBold = true;
+    } else if (cntVal > 0 && actRate >= pH0Val * 1.35) {
+      var dPlus = (actRate - pH0Val).toFixed(1);
+      trText = "⚡ Đang nổ nóng (+" + dPlus + "%)";
+      trColor = "#7C3AED"; trBg = "#F5F3FF";
+      if (gapVal === 0) { gapColor = "#15803D"; gapBg = "#DCFCE7"; gapBold = true; }
+    } else if (totalVerifiedDraws >= 40 && actRate <= pH0Val * 0.55) {
+      var dMinus = (actRate - pH0Val).toFixed(1);
+      trText = "❄️ Thiếu Quota (" + dMinus + "%)";
+      trColor = "#2563EB"; trBg = "#EFF6FF";
+    } else if (gapVal === 0) {
+      gapColor = "#15803D"; gapBg = "#DCFCE7"; gapBold = true;
     }
 
     sumCompRows.push([
       "Tổng " + sVal,
-      cntVal,
+      cntVal + " lần",
       Number(actRate.toFixed(2)) + "%",
-      standardCycle.toFixed(1) + " kỳ",
+      pH0Val.toFixed(1) + "% (" + standardCycle.toFixed(1) + "k)",
       gapVal + " kỳ",
       trText
     ]);
 
     trendColors.push({ color: trColor, bg: trBg });
+    gapColors.push({ color: gapColor, bg: gapBg, bold: gapBold });
   }
 
   sheet.getRange(30, 14, 16, 6).setValues(sumCompRows).setHorizontalAlignment("center");
   for (var tIdx = 0; tIdx < trendColors.length; tIdx++) {
+    var gapCell = sheet.getRange(30 + tIdx, 18);
+    gapCell.setFontColor(gapColors[tIdx].color).setBackground(gapColors[tIdx].bg);
+    if (gapColors[tIdx].bold) gapCell.setFontWeight("bold");
+
     var cRange = sheet.getRange(30 + tIdx, 19);
     cRange.setFontColor(trendColors[tIdx].color).setBackground(trendColors[tIdx].bg);
     if (trendColors[tIdx].bg !== "#FFFFFF") cRange.setFontWeight("bold");
   }
 
   // Dòng Tổng cộng Bảng 2
-  var totalRow = [["TỔNG CỘNG", totalVerifiedDraws, "100.0%", "-", "-", "-"]];
+  var totalRow = [["TỔNG CỘNG", totalVerifiedDraws + " lượt", "100.0%", "100.0%", "-", "-"]];
   sheet.getRange(46, 14, 1, 6).setValues(totalRow)
     .setFontWeight("bold").setBackground("#F1F5F9").setHorizontalAlignment("center");
 
