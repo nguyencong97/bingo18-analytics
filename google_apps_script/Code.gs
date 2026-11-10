@@ -36,6 +36,7 @@ function onOpen() {
     .addItem("🧹 Sửa & Chuẩn hóa toàn bộ Sheet Chi tiết (Format đồng nhất 100%)", "repairAndStandardizeChiTietSheetWithAlert")
     .addItem("📊 Tạo / Cập nhật Sheet Thống kê & Biểu đồ", "setupStatsAndChartsSheet")
     .addItem("🔮 Tạo / Cập nhật Sheet Dự đoán Hàng ngày", "setupPredictionSheet")
+    .addItem("📅 Tạo / Cập nhật Sheet Lịch sử Dự đoán 7 ngày", "setupPredictionHistorySheet")
     .addSeparator()
     .addItem("ℹ️ Kiểm tra trạng thái Job Tự động", "checkJobStatus")
     .addItem("⏸️ Tạm dừng Tự động hóa", "removeAutoJob")
@@ -105,6 +106,7 @@ function manualRunAll() {
   repairAndStandardizeChiTietSheet();
   setupStatsAndChartsSheet();
   setupPredictionSheet();
+  setupPredictionHistorySheet();
 
   var ui = SpreadsheetApp.getUi();
   if (syncResult && syncResult.addedCount > 0) {
@@ -113,7 +115,7 @@ function manualRunAll() {
       "• Đã nạp thêm: " + syncResult.addedCount + " kỳ quay mới vào sheet 'Chi tiết'.\n" +
       "• Kỳ mới nhất hiện tại: #" + syncResult.latestId + " (" + syncResult.latestTime + ")\n" +
       "• Nguồn dữ liệu: " + syncResult.source + "\n\n" +
-      "✅ Bảng Thống kê & Bảng Dự đoán (kèm 3 kỳ sắp quay) đã được tự động tính toán lại hoàn tất!"
+      "✅ Bảng Thống kê, Bảng Dự đoán & Lịch sử 7 ngày đã được tự động tính toán lại hoàn tất!"
     );
   } else {
     var maxIdStr = (syncResult && syncResult.currentMaxId) ? syncResult.currentMaxId : "hiện tại";
@@ -122,7 +124,7 @@ function manualRunAll() {
       "• Nguồn dữ liệu đã kiểm tra: " + (syncResult ? syncResult.source : "Vietlott/GitHub") + "\n" +
       "• Sheet 'Chi tiết' hiện ĐÃ ĐẦY ĐỦ VÀ MỚI NHẤT (Kỳ #" + maxIdStr + ").\n" +
       "• Không có kỳ quay nào bị thiếu sót.\n\n" +
-      "✅ Đã chuẩn hóa format 9 cột đồng nhất và làm mới bảng dự đoán 3 kỳ kế tiếp!"
+      "✅ Đã chuẩn hóa format 9 cột đồng nhất và làm mới toàn bộ Bảng Thống kê, Dự đoán & Lịch sử 7 ngày!"
     );
   }
 }
@@ -273,6 +275,13 @@ function autoSyncVietlottJob(isManual) {
     var vnHour = Number(Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "HH"));
     var vnMin = Number(Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "mm"));
     if (!isManual && (vnHour < 6 || (vnHour >= 22 && vnMin > 5))) {
+      var todayStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
+      var lastFinalizedDate = PropertiesService.getScriptProperties().getProperty("LAST_HISTORY_FINALIZED_DATE");
+      if (lastFinalizedDate !== todayStr) {
+        updatePredictionHistorySheet();
+        PropertiesService.getScriptProperties().setProperty("LAST_HISTORY_FINALIZED_DATE", todayStr);
+        Logger.log("Đã tự động tổng kết cuối ngày cho sheet Lịch sử dự đoán 7 ngày: " + todayStr);
+      }
       Logger.log("Ngoài khung giờ quay số Vietlott (06:00 - 22:05 VN). Job tạm nghỉ.");
       return { success: false, reason: "Ngoài khung giờ quay số (06:00 - 22:05 VN)", addedCount: 0 };
     }
@@ -351,9 +360,17 @@ function autoSyncVietlottJob(isManual) {
 
       updateStatsAndChartsSheet();
       updatePredictionSheet();
+      updatePredictionHistorySheet();
     } else {
       Logger.log("Không có kỳ quay mới nào cần thêm.");
       PropertiesService.getScriptProperties().setProperty("LAST_AUTO_SYNC", Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss") + " (Đã cập nhật mới nhất)");
+
+      var todayStrSync = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
+      var lastHistSync = PropertiesService.getScriptProperties().getProperty("LAST_HISTORY_SYNC_DATE");
+      if (lastHistSync !== todayStrSync) {
+        updatePredictionHistorySheet();
+        PropertiesService.getScriptProperties().setProperty("LAST_HISTORY_SYNC_DATE", todayStrSync);
+      }
     }
 
     return {
@@ -653,6 +670,18 @@ function extractDateStr(val) {
     return ymd[1] + "-" + ymd[2].padStart(2, "0") + "-" + ymd[3].padStart(2, "0");
   }
   return s.substring(0, 10);
+}
+
+var BINGO18_SUM_PAYOUTS = {
+  3: 120.0, 4: 40.0, 5: 20.0, 6: 12.0, 7: 8.0, 8: 5.5, 9: 4.7,
+  10: 4.4, 11: 4.4, 12: 4.7, 13: 5.5, 14: 8.0, 15: 12.0, 16: 20.0,
+  17: 40.0, 18: 120.0
+};
+
+function formatVND(amt) {
+  var sgn = amt > 0 ? "+" : (amt < 0 ? "-" : "");
+  var abs = Math.abs(Math.round(amt));
+  return sgn + abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ";
 }
 
 // -------------------------------------------------------------------------
@@ -1634,7 +1663,542 @@ function updatePredictionSheet() {
 }
 
 // -------------------------------------------------------------------------
-// 8. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ GITHUB ACTIONS HOẶC ROBOT)
+// 8. SHEET 'LỊCH SỬ DỰ ĐOÁN 7 NGÀY' (TỰ ĐỘNG TỔNG HỢP & DỌN DẸP 7 NGÀY GẦN NHẤT)
+// -------------------------------------------------------------------------
+function setupPredictionHistorySheet() {
+  updatePredictionHistorySheet();
+}
+
+function updatePredictionHistorySheet() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName("Lịch sử dự đoán 7 ngày") || ss.insertSheet("Lịch sử dự đoán 7 ngày");
+  var dataSheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
+  var lastRow = dataSheet.getLastRow();
+  if (lastRow < 20) return;
+
+  var readCount = Math.min(3000, lastRow - 1);
+  var rawData = dataSheet.getRange(lastRow - readCount + 1, 1, readCount, 9).getValues();
+
+  var drawsByDate = {};
+  var dateList = [];
+  var allSums = [];
+
+  for (var i = 0; i < rawData.length; i++) {
+    var dId = String(rawData[i][0]).replace("#", "").trim().padStart(7, "0");
+    var rowDate = extractDateStr(rawData[i][1]);
+    if (!rowDate) continue;
+    var rowTime = String(rawData[i][2] || "");
+    var rowSlot = Number(rawData[i][3] || 0);
+    var d1 = Number(rawData[i][4]);
+    var d2 = Number(rawData[i][5]);
+    var d3 = Number(rawData[i][6]);
+    var tot = Number(rawData[i][7]);
+    var res = String(rawData[i][8] || "");
+
+    if (tot >= 3 && tot <= 18) {
+      allSums.push(tot);
+      if (!drawsByDate[rowDate]) {
+        drawsByDate[rowDate] = [];
+        dateList.push(rowDate);
+      }
+      drawsByDate[rowDate].push({
+        draw_id: dId,
+        date: rowDate,
+        time: rowTime,
+        slot: rowSlot,
+        d1: d1,
+        d2: d2,
+        d3: d3,
+        total: tot,
+        result: res
+      });
+    }
+  }
+
+  if (dateList.length === 0) return;
+
+  // Sắp xếp các ngày giảm dần (Mới nhất ở trước, cũ hơn ở sau)
+  dateList.sort(function(a, b) { return String(b).localeCompare(String(a)); });
+
+  // CHẶN CỨNG ĐÚNG 7 NGÀY GẦN NHẤT: Bất kỳ ngày nào từ ngày thứ 8 trở đi sẽ bị loại bỏ
+  var activeDates = dateList.slice(0, 7);
+
+  // Xây dựng ma trận Markov từ chuỗi allSums
+  var transMatrix = {};
+  for (var f = 3; f <= 18; f++) {
+    transMatrix[f] = {};
+    for (var t = 3; t <= 18; t++) transMatrix[f][t] = 0;
+  }
+  for (var m = 0; m < allSums.length - 1; m++) {
+    var sFrom = allSums[m];
+    var sTo = allSums[m + 1];
+    if (sFrom >= 3 && sFrom <= 18 && sTo >= 3 && sTo <= 18) {
+      transMatrix[sFrom][sTo]++;
+    }
+  }
+
+  // Hàm dự đoán cho một kỳ dựa trên tổng kỳ trước và phân phối ngày
+  function predictSingleDraw(priorSum, dayDrawsSoFar) {
+    var curS = (priorSum >= 3 && priorSum <= 18) ? priorSum : 10;
+    var dayCnt = dayDrawsSoFar.length;
+    var isLate = dayCnt >= 120;
+    var rebalanceStrength = isLate ? 0.70 : (dayCnt >= 80 ? 0.35 : 0.10);
+
+    var dCounts = {};
+    var dSmall = 0, dTie = 0, dBig = 0;
+    var lastSeenSum = {};
+    var lastSeenDice = { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null };
+    for (var sc = 3; sc <= 18; sc++) { dCounts[sc] = 0; lastSeenSum[sc] = null; }
+
+    for (var di = 0; di < dayCnt; di++) {
+      var dItem = dayDrawsSoFar[di];
+      dCounts[dItem.total] = (dCounts[dItem.total] || 0) + 1;
+      lastSeenSum[dItem.total] = di;
+      if (dItem.total <= 9) dSmall++;
+      else if (dItem.total <= 11) dTie++;
+      else dBig++;
+
+      [dItem.d1, dItem.d2, dItem.d3].forEach(function(dv) {
+        if (dv >= 1 && dv <= 6) lastSeenDice[dv] = di;
+      });
+    }
+
+    var pSmallAct = dayCnt > 0 ? (dSmall / dayCnt) : 0.375;
+    var pTieAct = dayCnt > 0 ? (dTie / dayCnt) : 0.25;
+    var pBigAct = dayCnt > 0 ? (dBig / dayCnt) : 0.375;
+    var deltaSmall = pSmallAct - 0.375;
+    var deltaTie = pTieAct - 0.25;
+    var deltaBig = pBigAct - 0.375;
+
+    var bestCand = 10, maxScore = -1;
+    for (var cand = 3; cand <= 18; cand++) {
+      var p0 = THEORETICAL_WAYS[cand - 3] / 216.0;
+      var markovScore = transMatrix[curS][cand] + 5.0 * p0;
+      var ensScore = p0 * 100;
+      var score = markovScore * 0.6 + ensScore * 0.4;
+
+      if (dayCnt > 0) {
+        var actP = dCounts[cand] / dayCnt;
+        var deltaP = actP - p0;
+        var qMod = 1.0 - (rebalanceStrength * (deltaP / Math.max(p0, 0.04)));
+        if (qMod < 0.20) qMod = 0.20;
+        if (qMod > 1.80) qMod = 1.80;
+
+        var sMod = 1.0;
+        if (rebalanceStrength > 0) {
+          if (cand <= 9 && deltaSmall < -0.015) sMod = 1.15;
+          else if (cand >= 10 && cand <= 11 && deltaTie < -0.015) sMod = 1.15;
+          else if (cand >= 12 && deltaBig < -0.015) sMod = 1.15;
+
+          if (cand <= 9 && deltaSmall > 0.025) sMod = 0.88;
+          else if (cand >= 10 && cand <= 11 && deltaTie > 0.025) sMod = 0.88;
+          else if (cand >= 12 && deltaBig > 0.025) sMod = 0.88;
+        }
+
+        var gap = (lastSeenSum[cand] === null) ? dayCnt : (dayCnt - 1 - lastSeenSum[cand]);
+        var gapMod = 1.0 + Math.min(0.25, Math.max(0, (gap / (1.0 / p0) - 1.0) * 0.12));
+        score = score * qMod * sMod * gapMod;
+      }
+
+      if (score > maxScore) {
+        maxScore = score;
+        bestCand = cand;
+      }
+    }
+
+    var cluster = [Math.max(3, bestCand - 1), bestCand, Math.min(18, bestCand + 1)];
+    var clusterText = "[" + cluster[0] + ", " + cluster[1] + ", " + cluster[2] + "]";
+    var pureSide = (bestCand <= 9) ? "Nhỏ" : ((bestCand <= 11) ? "Hòa" : "Lớn");
+    var candSide = (bestCand <= 9) ? "Nhỏ (3..9)" : ((bestCand <= 11) ? "Hòa (10..11)" : "Lớn (12..18)");
+
+    var combo = BEST_DICE_COMBO[bestCand] || [3, 4, 4];
+    var bestD = combo[1];
+    var maxDVal = -1;
+    for (var cIdx = 0; cIdx < combo.length; cIdx++) {
+      var dv = combo[cIdx];
+      var gapD = (lastSeenDice[dv] === null) ? dayCnt : (dayCnt - 1 - lastSeenDice[dv]);
+      if (gapD > maxDVal) { maxDVal = gapD; bestD = dv; }
+    }
+    var diceText = "Mặt số " + bestD + " (42.1%)";
+
+    var confScore = Math.min(95, Math.max(50, Math.round(55 + (maxScore % 35))));
+    var confLabel = "🟢 Chuẩn (Vào 1x)";
+    var confBg = "#EFF6FF";
+    var confColor = "#1E40AF";
+    var mult = 1;
+    if (confScore >= 78) {
+      confLabel = "💎 Rất cao (Vào 2x)";
+      confBg = "#DCFCE7";
+      confColor = "#15803D";
+      mult = 2;
+    } else if (confScore < 60) {
+      confLabel = "⚪ Nhiễu (Bỏ qua)";
+      confBg = "#FEF3C7";
+      confColor = "#B45309";
+      mult = 0;
+    }
+
+    return {
+      sum: bestCand,
+      cluster: cluster,
+      clusterText: clusterText,
+      side: candSide,
+      pureSide: pureSide,
+      dice: bestD,
+      diceText: diceText,
+      confScore: confScore,
+      confLabel: confLabel,
+      confBg: confBg,
+      confColor: confColor,
+      mult: mult
+    };
+  }
+
+  // Xử lý từng ngày trong activeDates
+  var daysData = [];
+  var grandTotalCost = 0, grandTotalPayout = 0, grandTotalActiveBets = 0;
+  var grandHitDoor = 0, grandHitCluster = 0, grandHitDice = 0, grandTotalVerified = 0;
+
+  for (var ad = 0; ad < activeDates.length; ad++) {
+    var curDate = activeDates[ad];
+    var dayDraws = drawsByDate[curDate] || [];
+    dayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
+
+    var dayChronFinancials = [];
+    var dayRunningBalance = 0;
+    var dayTotalCost = 0;
+    var dayTotalPayout = 0;
+    var dayActiveBets = 0;
+    var dayHitDoor = 0, dayHitCluster = 0, dayHitDice = 0, dayHitSum = 0;
+
+    for (var k = 0; k < dayDraws.length; k++) {
+      var prevTot = (k > 0) ? dayDraws[k - 1].total : 10;
+      var pItem = predictSingleDraw(prevTot, dayDraws.slice(0, k));
+      var curDraw = dayDraws[k];
+
+      var costK = pItem.mult * 50000;
+      var payoutK = 0;
+
+      if (pItem.mult > 0) {
+        dayActiveBets++;
+        var unitTicket = pItem.mult * 10000;
+        var actTotal = curDraw.total;
+        var actSide = (actTotal <= 9) ? "Nhỏ" : ((actTotal <= 11) ? "Hòa" : "Lớn");
+        var actDices = [curDraw.d1, curDraw.d2, curDraw.d3];
+
+        if (actSide === pItem.pureSide) {
+          payoutK += unitTicket * (pItem.pureSide === "Hòa" ? 2.0 : 1.5);
+          dayHitDoor++;
+        }
+
+        var matchDiceCnt = 0;
+        for (var dc = 0; dc < 3; dc++) {
+          if (actDices[dc] === pItem.dice) matchDiceCnt++;
+        }
+        if (matchDiceCnt === 1) payoutK += unitTicket * 1.2;
+        else if (matchDiceCnt === 2) payoutK += unitTicket * 2.0;
+        else if (matchDiceCnt === 3) payoutK += unitTicket * 3.0;
+        if (matchDiceCnt > 0) dayHitDice++;
+
+        if (pItem.cluster.indexOf(actTotal) >= 0) {
+          var sMult = BINGO18_SUM_PAYOUTS[actTotal] || 4.4;
+          payoutK += unitTicket * sMult;
+          dayHitCluster++;
+        }
+        if (actTotal === pItem.sum) dayHitSum++;
+      }
+
+      var pnlK = payoutK - costK;
+      dayTotalCost += costK;
+      dayTotalPayout += payoutK;
+      dayRunningBalance += pnlK;
+
+      dayChronFinancials.push({
+        pItem: pItem,
+        cost: costK,
+        payout: payoutK,
+        pnl: pnlK,
+        cumBalance: dayRunningBalance
+      });
+    }
+
+    var dayNetPnl = dayTotalPayout - dayTotalCost;
+    var dayRoi = dayTotalCost > 0 ? (dayNetPnl / dayTotalCost) * 100 : 0;
+    var verifiedCnt = dayDraws.length;
+
+    grandTotalCost += dayTotalCost;
+    grandTotalPayout += dayTotalPayout;
+    grandTotalActiveBets += dayActiveBets;
+    grandHitDoor += dayHitDoor;
+    grandHitCluster += dayHitCluster;
+    grandHitDice += dayHitDice;
+    grandTotalVerified += verifiedCnt;
+
+    var statusBadge = "🟡 Hòa vốn (0 đ)";
+    if (dayNetPnl > 0) statusBadge = "🟢 Thắng lớn (" + formatVND(dayNetPnl) + ")";
+    else if (dayNetPnl < 0) statusBadge = "🔴 Cắt lỗ (" + formatVND(dayNetPnl) + ")";
+
+    daysData.push({
+      date: curDate,
+      draws: dayDraws,
+      financials: dayChronFinancials,
+      totalCost: dayTotalCost,
+      totalPayout: dayTotalPayout,
+      netPnl: dayNetPnl,
+      roi: dayRoi,
+      activeBets: dayActiveBets,
+      verifiedCnt: verifiedCnt,
+      doorRate: verifiedCnt > 0 ? (dayHitDoor / verifiedCnt) * 100 : 0,
+      clusterRate: verifiedCnt > 0 ? (dayHitCluster / verifiedCnt) * 100 : 0,
+      diceRate: verifiedCnt > 0 ? (dayHitDice / verifiedCnt) * 100 : 0,
+      statusBadge: statusBadge
+    });
+  }
+
+  // XÓA SẠCH SHEET CŨ ĐỂ TỰ ĐỘNG DỌN DẸP DỮ LIỆU CŨ QUÁ 7 NGÀY
+  sheet.clear();
+
+  // 1. BANNER TIÊU ĐỀ CHÍNH
+  sheet.getRange("A1:L1").merge()
+    .setValue("BINGO18 ANALYTICS - TỔNG HỢP LỊCH SỬ DỰ BÁO ĐA TẦNG & TÀI CHÍNH 7 NGÀY GẦN NHẤT")
+    .setFontWeight("bold").setFontSize(14).setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  sheet.getRange("A2:L2").merge()
+    .setValue("Tự động lưu trữ 7 ngày gần nhất & tự động dọn dẹp ngày cũ | Cập nhật lúc: " + Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss") + " | Quản trị vốn: Kịch bản 3 (Kelly 10k/lệnh)")
+    .setFontStyle("italic").setFontColor("#334155").setHorizontalAlignment("center");
+
+  // 2. BẢNG TỔNG HỢP HIỆU SUẤT TÀI CHÍNH 7 NGÀY GẦN NHẤT
+  sheet.getRange("A4:J4").setValues([["Ngày", "Số kỳ cược", "Tổng vốn cược", "Tổng tiền trúng", "Lãi/Lỗ ròng", "Tỷ lệ ROI", "Trúng Cửa", "Trúng Dải 3 Tổng", "Trúng Mặt Xúc Xắc", "Đánh giá ngày"]])
+    .setFontWeight("bold").setFontSize(10).setBackground("#1E3A8A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  var summaryRows = [];
+  var summaryStyles = [];
+
+  for (var si = 0; si < daysData.length; si++) {
+    var dObj = daysData[si];
+    summaryRows.push([
+      dObj.date,
+      dObj.activeBets + " kỳ",
+      formatVND(dObj.totalCost).replace("+", ""),
+      formatVND(dObj.totalPayout).replace("+", ""),
+      formatVND(dObj.netPnl),
+      (dObj.roi >= 0 ? "+" : "") + dObj.roi.toFixed(1) + "%",
+      dObj.doorRate.toFixed(1) + "%",
+      dObj.clusterRate.toFixed(1) + "%",
+      dObj.diceRate.toFixed(1) + "%",
+      dObj.statusBadge
+    ]);
+
+    var pnlBg = dObj.netPnl >= 0 ? "#DCFCE7" : "#FEF2F2";
+    var pnlColor = dObj.netPnl >= 0 ? "#15803D" : "#DC2626";
+    summaryStyles.push({ pnlBg: pnlBg, pnlColor: pnlColor });
+  }
+
+  if (summaryRows.length > 0) {
+    sheet.getRange(5, 1, summaryRows.length, 10).setValues(summaryRows).setHorizontalAlignment("center");
+    for (var sIdx = 0; sIdx < summaryStyles.length; sIdx++) {
+      sheet.getRange(5 + sIdx, 5).setBackground(summaryStyles[sIdx].pnlBg).setFontColor(summaryStyles[sIdx].pnlColor).setFontWeight("bold");
+      sheet.getRange(5 + sIdx, 6).setBackground(summaryStyles[sIdx].pnlBg).setFontColor(summaryStyles[sIdx].pnlColor).setFontWeight("bold");
+    }
+  }
+
+  // Dòng Tổng Kết 7 Ngày
+  var sumFooterIdx = 5 + summaryRows.length;
+  var grandNetPnl = grandTotalPayout - grandTotalCost;
+  var grandRoi = grandTotalCost > 0 ? (grandNetPnl / grandTotalCost) * 100 : 0;
+  var grandDoorRate = grandTotalVerified > 0 ? (grandHitDoor / grandTotalVerified) * 100 : 0;
+  var grandClusterRate = grandTotalVerified > 0 ? (grandHitCluster / grandTotalVerified) * 100 : 0;
+  var grandDiceRate = grandTotalVerified > 0 ? (grandHitDice / grandTotalVerified) * 100 : 0;
+  var grandVerdict = grandNetPnl >= 0 ? "🟢 Tuần Sinh Lời" : "🔴 Tuần Bù Lỗ";
+
+  sheet.getRange(sumFooterIdx, 1, 1, 2).merge().setValue("TỔNG KẾT 7 NGÀY GẦN NHẤT")
+    .setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 3).setValue(formatVND(grandTotalCost).replace("+", "")).setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 4).setValue(formatVND(grandTotalPayout).replace("+", "")).setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 5).setValue(formatVND(grandNetPnl)).setFontWeight("bold")
+    .setBackground(grandNetPnl >= 0 ? "#DCFCE7" : "#FEF2F2")
+    .setFontColor(grandNetPnl >= 0 ? "#15803D" : "#DC2626").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 6).setValue((grandRoi >= 0 ? "+" : "") + grandRoi.toFixed(1) + "%").setFontWeight("bold")
+    .setBackground(grandNetPnl >= 0 ? "#DCFCE7" : "#FEF2F2")
+    .setFontColor(grandNetPnl >= 0 ? "#15803D" : "#DC2626").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 7).setValue(grandDoorRate.toFixed(1) + "%").setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 8).setValue(grandClusterRate.toFixed(1) + "%").setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 9).setValue(grandDiceRate.toFixed(1) + "%").setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+  sheet.getRange(sumFooterIdx, 10).setValue(grandVerdict).setFontWeight("bold").setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  // 3. CHI TIẾT BẢNG DỰ ĐOÁN & TÀI CHÍNH TỪNG NGÀY
+  var curRow = sumFooterIdx + 3;
+
+  for (var dayIdx = 0; dayIdx < daysData.length; dayIdx++) {
+    var dayItem = daysData[dayIdx];
+    var drawsList = dayItem.draws;
+    var finList = dayItem.financials;
+
+    var bannerText = "📅 BẢNG DỰ ĐOÁN & QUẢN TRỊ TÀI CHÍNH NGÀY " + dayItem.date +
+      " | VỐN: " + formatVND(dayItem.totalCost).replace("+", "") +
+      " | THU VỀ: " + formatVND(dayItem.totalPayout).replace("+", "") +
+      " | LÃI RÒNG: " + formatVND(dayItem.netPnl) +
+      " (" + (dayItem.roi >= 0 ? "+" : "") + dayItem.roi.toFixed(1) + "% ROI)";
+
+    sheet.getRange(curRow, 1, 1, 12).merge().setValue(bannerText)
+      .setFontWeight("bold").setFontSize(11)
+      .setBackground("#1E293B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+    curRow++;
+
+    var tableHeaders = [["Mã kỳ", "Giờ quay", "Bộ số gợi ý", "Tổng trọng tâm", "Dải 3 Tổng bọc lót", "Dự đoán Cửa", "Viên chủ lực (1..6)", "Độ tin cậy & Lệnh", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Lãi/Lỗ kỳ (+/- đ)", "Số dư P&L tích lũy"]];
+    sheet.getRange(curRow, 1, 1, 12).setValues(tableHeaders)
+      .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+    curRow++;
+
+    var dayDrawRows = [];
+    var bgMatrix = [];
+    var colorMatrix = [];
+    var weightMatrix = [];
+
+    for (var dk = drawsList.length - 1; dk >= 0; dk--) {
+      var dCur = drawsList[dk];
+      var fCur = finList[dk];
+      var pCur = fCur.pItem;
+
+      var numIdCur = Number(dCur.draw_id);
+      var curSlotD = (dCur.date === "2026-11-10" && numIdCur >= 195421) ? (numIdCur - 195420) : (dCur.slot || (dk + 1));
+      if (curSlotD < 1) curSlotD = 1;
+      if (curSlotD > 159) curSlotD = 159;
+      var timeStrD = formatSlotTime(curSlotD);
+
+      var comboD = BEST_DICE_COMBO[pCur.sum] || [2, 3, 5];
+      var comboDStr = comboD[0] + " - " + comboD[1] + " - " + comboD[2];
+      var actualDiceDStr = dCur.d1 + " - " + dCur.d2 + " - " + dCur.d3 + " (Tổng " + dCur.total + ")";
+      var actSideD = (dCur.total <= 9) ? "Nhỏ" : ((dCur.total <= 11) ? "Hòa" : "Lớn");
+      var actDiceListD = [dCur.d1, dCur.d2, dCur.d3];
+
+      var isHitExact = (dCur.total === pCur.sum);
+      var isHitCl = (pCur.cluster.indexOf(dCur.total) >= 0);
+      var isHitSd = (actSideD === pCur.pureSide);
+      var isHitDc = (actDiceListD.indexOf(pCur.dice) >= 0);
+
+      var mText = "";
+      var mCol = "#475569";
+      var mBgc = "#FFFFFF";
+      var mBold = false;
+
+      if (isHitExact && isHitSd) {
+        mText = "🎯🎯 Trúng Trọng Tâm & Cửa";
+        mCol = "#15803D"; mBgc = "#DCFCE7"; mBold = true;
+      } else if (isHitCl && isHitSd) {
+        mText = "🎯 Trúng Dải & Cửa (Tổng " + dCur.total + ")";
+        mCol = "#0D9488"; mBgc = "#CCFBF1"; mBold = true;
+      } else if (isHitCl) {
+        mText = "🎯 Trúng Dải (Tổng " + dCur.total + ")";
+        mCol = "#2563EB"; mBgc = "#EFF6FF"; mBold = true;
+      } else if (isHitSd && isHitDc) {
+        mText = "🎯 Trúng Cửa & Mặt " + pCur.dice;
+        mCol = "#16A34A"; mBgc = "#F0FDF4"; mBold = true;
+      } else if (isHitSd) {
+        mText = "🎯 Trúng Cửa (" + actSideD + ")";
+        mCol = "#16A34A"; mBgc = "#F0FDF4"; mBold = false;
+      } else if (isHitDc) {
+        mText = "🎯 Trúng Mặt " + pCur.dice;
+        mCol = "#7C3AED"; mBgc = "#F5F3FF"; mBold = false;
+      } else {
+        mText = "Lệch (Tổng " + dCur.total + " - " + actSideD + ")";
+        mCol = "#64748B"; mBgc = "#FFFFFF"; mBold = false;
+      }
+
+      var pnlStr = "";
+      var pnlCol = "#475569";
+      var pnlBgc = "#FFFFFF";
+
+      if (fCur.pItem.mult === 0) {
+        pnlStr = "⚪ Bỏ qua (0 đ)";
+        pnlCol = "#B45309";
+        pnlBgc = "#FEF3C7";
+      } else if (fCur.pnl > 0) {
+        pnlStr = formatVND(fCur.pnl);
+        pnlCol = "#15803D";
+        pnlBgc = "#DCFCE7";
+      } else if (fCur.pnl < 0) {
+        pnlStr = formatVND(fCur.pnl);
+        pnlCol = "#DC2626";
+        pnlBgc = "#FEF2F2";
+      } else {
+        pnlStr = "0 đ";
+      }
+
+      var cumStr = formatVND(fCur.cumBalance);
+      var cumCol = fCur.cumBalance >= 0 ? "#15803D" : "#DC2626";
+      var cumBgc = fCur.cumBalance >= 0 ? "#DCFCE7" : "#FEF2F2";
+
+      dayDrawRows.push([
+        "#" + dCur.draw_id,
+        timeStrD,
+        comboDStr,
+        "Tổng " + pCur.sum,
+        pCur.clusterText,
+        pCur.side,
+        pCur.diceText,
+        pCur.confLabel,
+        actualDiceDStr,
+        mText,
+        pnlStr,
+        cumStr
+      ]);
+
+      var rowBg = ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF", pCur.confBg, "#FFFFFF", mBgc, pnlBgc, cumBgc];
+      var rowColor = ["#334155", "#334155", "#334155", "#334155", "#334155", "#334155", "#334155", pCur.confColor, "#334155", mCol, pnlCol, cumCol];
+      var rowWeight = ["normal", "normal", "normal", "normal", "normal", "normal", "normal", "bold", "normal", mBold ? "bold" : "normal", (fCur.pnl !== 0) ? "bold" : "normal", "bold"];
+
+      bgMatrix.push(rowBg);
+      colorMatrix.push(rowColor);
+      weightMatrix.push(rowWeight);
+    }
+
+    if (dayDrawRows.length > 0) {
+      var dataRange = sheet.getRange(curRow, 1, dayDrawRows.length, 12);
+      dataRange.setValues(dayDrawRows).setHorizontalAlignment("center");
+      sheet.getRange(curRow, 1, dayDrawRows.length, 1).setNumberFormat("@");
+      dataRange.setBackgrounds(bgMatrix);
+      dataRange.setFontColors(colorMatrix);
+      dataRange.setFontWeights(weightMatrix);
+
+      curRow += dayDrawRows.length;
+
+      var dFooterLabel = "💰 TỔNG KẾT TÀI CHÍNH NGÀY " + dayItem.date + " (VỐN: " + formatVND(dayItem.totalCost).replace("+", "") + " | THU: " + formatVND(dayItem.totalPayout).replace("+", "") + ")";
+      sheet.getRange(curRow, 1, 1, 10).merge().setValue(dFooterLabel)
+        .setFontWeight("bold").setFontSize(10).setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+      sheet.getRange(curRow, 11).setValue(formatVND(dayItem.netPnl))
+        .setFontWeight("bold").setFontSize(11)
+        .setBackground(dayItem.netPnl >= 0 ? "#DCFCE7" : "#FEF2F2")
+        .setFontColor(dayItem.netPnl >= 0 ? "#15803D" : "#DC2626")
+        .setHorizontalAlignment("center");
+
+      sheet.getRange(curRow, 12).setValue((dayItem.roi >= 0 ? "+" : "") + dayItem.roi.toFixed(1) + "% ROI")
+        .setFontWeight("bold").setFontSize(11)
+        .setBackground(dayItem.roi >= 0 ? "#DCFCE7" : "#FEF2F2")
+        .setFontColor(dayItem.roi >= 0 ? "#15803D" : "#DC2626")
+        .setHorizontalAlignment("center");
+
+      curRow += 2;
+    }
+  }
+
+  sheet.setColumnWidth(1, 135);
+  sheet.setColumnWidth(2, 80);
+  sheet.setColumnWidth(3, 95);
+  sheet.setColumnWidth(4, 95);
+  sheet.setColumnWidth(5, 125);
+  sheet.setColumnWidth(6, 135);
+  sheet.setColumnWidth(7, 125);
+  sheet.setColumnWidth(8, 135);
+  sheet.setColumnWidth(9, 140);
+  sheet.setColumnWidth(10, 165);
+  sheet.setColumnWidth(11, 135);
+  sheet.setColumnWidth(12, 145);
+}
+
+// -------------------------------------------------------------------------
+// 9. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ GITHUB ACTIONS HOẶC ROBOT)
 // -------------------------------------------------------------------------
 function doPost(e) {
   try {
@@ -1676,6 +2240,7 @@ function doPost(e) {
       sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, 9).setValues(rowsToAppend);
       updateStatsAndChartsSheet();
       updatePredictionSheet();
+      updatePredictionHistorySheet();
     }
     return ContentService.createTextOutput(JSON.stringify({ status: "ok", count: rowsToAppend.length }))
       .setMimeType(ContentService.MimeType.JSON);
