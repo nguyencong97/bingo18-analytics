@@ -117,6 +117,34 @@ class DataStorage:
             for r in all_records:
                 writer.writerow(r)
 
+        # 4b. Tự động đồng bộ data/sheet_initial_import.csv chuẩn 9 cột
+        sheet_csv = self.data_dir / "sheet_initial_import.csv"
+        sheet_headers = ["Mã kỳ", "Ngày quay", "Giờ", "Slot", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng", "Bộ số"]
+        with open(sheet_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(sheet_headers)
+            for r in all_records:
+                d_id = r["draw_id"].replace("#", "").strip().zfill(7)
+                num_id = int(d_id)
+                d_date = r["date"]
+                slot = int(r.get("slot_in_day") or 0)
+                if d_date == "2026-11-10" and num_id >= 195421:
+                    slot = num_id - 195420
+                if slot < 1: slot = 1
+                if slot > 159: slot = 159
+
+                tot_min = 6 * 60 + slot * 6
+                hh = tot_min // 60
+                mm = tot_min % 60
+                d_time = f"{hh:02d}:{mm:02d}"
+
+                d1 = int(r["d1"])
+                d2 = int(r["d2"])
+                d3 = int(r["d3"])
+                tot = int(r["total"])
+                res = r.get("result") or f"{d1} {d2} {d3} {tot}"
+                writer.writerow([d_id, d_date, d_time, slot, d1, d2, d3, tot, res])
+
         # Cập nhật cache ID
         for r in new_records:
             self._existing_ids.add(r["draw_id"])
