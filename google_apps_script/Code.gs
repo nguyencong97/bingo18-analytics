@@ -1071,6 +1071,113 @@ function updatePredictionSheet() {
   sheet.setColumnWidth(7, 180);
   sheet.setColumnWidth(8, 140);
   sheet.setColumnWidth(9, 160);
+
+  // -----------------------------------------------------------------------
+  // BẢNG 1: THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH HÔM NAY (K19:P23)
+  // -----------------------------------------------------------------------
+  var hitSumCount = 0;
+  var hitSideCount = 0;
+  var totalVerifiedDraws = 0;
+
+  for (var kv = 0; kv < todayDraws.length; kv++) {
+    var prevTotK = (kv > 0) ? todayDraws[kv - 1].total : 10;
+    var predSK = predictMultiStep(prevTotK, 1)[0];
+    var actTotK = todayDraws[kv].total;
+    if (actTotK >= 3 && actTotK <= 18) {
+      totalVerifiedDraws++;
+      if (actTotK === predSK) hitSumCount++;
+
+      var actSide = (actTotK <= 9) ? "Nhỏ" : ((actTotK <= 11) ? "Hòa" : "Lớn");
+      var prdSide = (predSK <= 9) ? "Nhỏ" : ((predSK <= 11) ? "Hòa" : "Lớn");
+      if (actSide === prdSide) hitSideCount++;
+    }
+  }
+
+  var sumHitRate = totalVerifiedDraws > 0 ? (hitSumCount / totalVerifiedDraws) * 100 : 0;
+  var sideHitRate = totalVerifiedDraws > 0 ? (hitSideCount / totalVerifiedDraws) * 100 : 0;
+
+  sheet.getRange("K19:P19").merge().setValue("🎯 BẢNG THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH HÔM NAY")
+    .setFontWeight("bold").setBackground("#1E1B4B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  var perfRows = [
+    ["Tổng số kỳ đã đối chiếu lệnh hôm nay", totalVerifiedDraws + " kỳ", "Kỳ vọng ngẫu nhiên (H0)", "~8.0% (Tổng) / ~37.5% (Cửa)", "-", "-"],
+    ["Số lệnh trúng Tổng chính xác", hitSumCount + " kỳ", "Hiệu suất trúng Tổng (%)", sumHitRate.toFixed(1) + "%", (sumHitRate - 8.0 >= 0 ? "+" : "") + (sumHitRate - 8.0).toFixed(1) + "%", sumHitRate >= 8.0 ? "🔥 Vượt kỳ vọng" : "Bình thường"],
+    ["Số lệnh trúng Cửa (Lớn/Hòa/Nhỏ)", hitSideCount + " kỳ", "Hiệu suất trúng Cửa (%)", sideHitRate.toFixed(1) + "%", (sideHitRate - 37.5 >= 0 ? "+" : "") + (sideHitRate - 37.5).toFixed(1) + "%", sideHitRate >= 37.5 ? "🔥 Ưu thế tích cực" : "Bình thường"]
+  ];
+  sheet.getRange(20, 11, 3, 6).setValues(perfRows).setHorizontalAlignment("center");
+  sheet.getRange(20, 11, 3, 1).setFontWeight("bold").setHorizontalAlignment("left");
+  sheet.getRange(20, 13, 3, 1).setFontWeight("bold").setHorizontalAlignment("left");
+
+  sheet.getRange("K23:M23").merge().setValue("Trạng thái đánh giá mô hình hôm nay").setFontWeight("bold").setHorizontalAlignment("left");
+  var statusText = (sumHitRate >= 8.0 || sideHitRate >= 40.0) ? "🟢 HIỆU SUẤT TỐT (MÔ HÌNH PHÁT HUY TÁC DỤNG)" : "🟡 THEO SÁT PHÂN PHỐI NGẪU NHIÊN";
+  sheet.getRange("N23:P23").merge().setValue(statusText).setFontWeight("bold").setHorizontalAlignment("center")
+    .setBackground((sumHitRate >= 8.0 || sideHitRate >= 40.0) ? "#DCFCE7" : "#FEF3C7")
+    .setFontColor((sumHitRate >= 8.0 || sideHitRate >= 40.0) ? "#15803D" : "#B45309");
+
+  // -----------------------------------------------------------------------
+  // BẢNG 2: TẦN SUẤT CÁC TỔNG ĐÃ VỀ VS TỈ LỆ BAN ĐẦU (H0) (K26:P44)
+  // -----------------------------------------------------------------------
+  sheet.getRange("K26:P26").merge().setValue("📊 TẦN SUẤT CÁC TỔNG ĐÃ VỀ HÔM NAY VS TỈ LỆ BAN ĐẦU (H0)")
+    .setFontWeight("bold").setBackground("#065F46").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  var table2Headers = [["Tổng", "Số lượt về", "Tỉ lệ hôm nay (%)", "Tỉ lệ ban đầu H0 (%)", "Chênh lệch (%)", "Đánh giá xu hướng"]];
+  sheet.getRange(27, 11, 1, 6).setValues(table2Headers)
+    .setFontWeight("bold").setBackground("#047857").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+  var sumCompRows = [];
+  var trendColors = [];
+
+  for (var sVal = 3; sVal <= 18; sVal++) {
+    var cntVal = dailyCounts[sVal] || 0;
+    var actRate = totalVerifiedDraws > 0 ? (cntVal / totalVerifiedDraws) * 100 : 0;
+    var initRate = (THEORETICAL_WAYS[sVal - 3] / 216.0) * 100;
+    var diff = actRate - initRate;
+
+    var trText = "Ổn định (Chuẩn H0)";
+    var trColor = "#475569";
+    var trBg = "#FFFFFF";
+
+    if (diff > 2.0) {
+      trText = "🔥 Đang về nhiều (Hot)";
+      trColor = "#DC2626";
+      trBg = "#FEF2F2";
+    } else if (diff < -2.0) {
+      trText = "❄️ Về ít hơn chuẩn (Cold)";
+      trColor = "#2563EB";
+      trBg = "#EFF6FF";
+    }
+
+    sumCompRows.push([
+      "Tổng " + sVal,
+      cntVal,
+      Number(actRate.toFixed(2)) + "%",
+      Number(initRate.toFixed(2)) + "%",
+      (diff >= 0 ? "+" : "") + diff.toFixed(2) + "%",
+      trText
+    ]);
+
+    trendColors.push({ color: trColor, bg: trBg });
+  }
+
+  sheet.getRange(28, 11, 16, 6).setValues(sumCompRows).setHorizontalAlignment("center");
+  for (var tIdx = 0; tIdx < trendColors.length; tIdx++) {
+    var cRange = sheet.getRange(28 + tIdx, 16);
+    cRange.setFontColor(trendColors[tIdx].color).setBackground(trendColors[tIdx].bg);
+    if (trendColors[tIdx].bg !== "#FFFFFF") cRange.setFontWeight("bold");
+  }
+
+  // Dòng Tổng cộng
+  var totalRow = [["TỔNG CỘNG", totalVerifiedDraws, "100.0%", "100.0%", "0.0%", "-"]];
+  sheet.getRange(44, 11, 1, 6).setValues(totalRow)
+    .setFontWeight("bold").setBackground("#F1F5F9").setHorizontalAlignment("center");
+
+  // Định dạng độ rộng cột K..P
+  sheet.setColumnWidth(11, 140);
+  sheet.setColumnWidth(12, 100);
+  sheet.setColumnWidth(13, 140);
+  sheet.setColumnWidth(14, 150);
+  sheet.setColumnWidth(15, 120);
+  sheet.setColumnWidth(16, 180);
 }
 
 // -------------------------------------------------------------------------
