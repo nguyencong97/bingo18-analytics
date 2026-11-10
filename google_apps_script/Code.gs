@@ -835,9 +835,9 @@ function updatePredictionSheet() {
   ensembleList.sort(function(a, b) { return b.pEnsemble - a.pEnsemble; });
 
   sheet.clear();
-  sheet.getRange("A1:R1").merge().setValue("BINGO18 ANALYTICS - HỆ THỐNG DỰ BÁO XÁC SUẤT ĐA TẦNG & TỐI ƯU HIỆU SUẤT TRÚNG")
+  sheet.getRange("A1:S1").merge().setValue("BINGO18 ANALYTICS - HỆ THỐNG DỰ BÁO XÁC SUẤT ĐA TẦNG & QUẢN TRỊ TÀI CHÍNH")
     .setFontWeight("bold").setFontSize(14).setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange("A2:R2").merge().setValue("Kỳ tham chiếu gần nhất: #" + lastDrawId + " | Kết quả: " + lastResult + " (Tổng " + lastSum + ") | Cập nhật: " + Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"))
+  sheet.getRange("A2:S2").merge().setValue("Kỳ tham chiếu gần nhất: #" + lastDrawId + " | Kết quả: " + lastResult + " (Tổng " + lastSum + ") | Cập nhật: " + Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"))
     .setFontStyle("italic").setHorizontalAlignment("center");
 
   sheet.getRange(4, 1, 1, 9).setValues([["Hạng", "Tổng", "Dự phóng Hợp nhất (%)", "Lý thuyết H0 (%)", "Mô hình Markov (%)", "Mô hình Hot-500 (%)", "Mô hình Bayes (%)", "Độ lệch / H0 (%)", "Khuyến nghị xu hướng"]])
@@ -850,34 +850,34 @@ function updatePredictionSheet() {
   }
   sheet.getRange(5, 1, 16, 9).setValues(mainRows).setHorizontalAlignment("center");
 
-  // KHUNG PHẢI: TOP 3 TỔNG XÁC SUẤT CAO NHẤT (M4:R7)
-  sheet.getRange("M4:R4").merge().setValue("🎯 TOP 3 TỔNG XÁC SUẤT CAO NHẤT KỲ TIẾP THEO")
+  // KHUNG PHẢI: TOP 3 TỔNG XÁC SUẤT CAO NHẤT (N4:S7)
+  sheet.getRange("N4:S4").merge().setValue("🎯 TOP 3 TỔNG XÁC SUẤT CAO NHẤT KỲ TIẾP THEO")
     .setFontWeight("bold").setBackground("#D97706").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange(5, 13, 3, 6).setValues([
+  sheet.getRange(5, 14, 3, 6).setValues([
     ["Vị trí #1", "Tổng " + ensembleList[0].sum, ensembleList[0].pEnsemble + "%", "Lý thuyết: " + ensembleList[0].pH0 + "%", "Lệch: " + (ensembleList[0].delta >= 0 ? "+" : "") + ensembleList[0].delta + "%", ensembleList[0].trend],
     ["Vị trí #2", "Tổng " + ensembleList[1].sum, ensembleList[1].pEnsemble + "%", "Lý thuyết: " + ensembleList[1].pH0 + "%", "Lệch: " + (ensembleList[1].delta >= 0 ? "+" : "") + ensembleList[1].delta + "%", ensembleList[1].trend],
     ["Vị trí #3", "Tổng " + ensembleList[2].sum, ensembleList[2].pEnsemble + "%", "Lý thuyết: " + ensembleList[2].pH0 + "%", "Lệch: " + (ensembleList[2].delta >= 0 ? "+" : "") + ensembleList[2].delta + "%", ensembleList[2].trend]
   ]).setFontWeight("bold").setHorizontalAlignment("center");
 
-  // KHUNG PHẢI: DỰ BÁO XÁC SUẤT CỬA LỚN / HÒA / NHỎ (M9:R12)
-  sheet.getRange("M9:R9").merge().setValue("⚖️ DỰ BÁO XÁC SUẤT CỬA LỚN / HÒA / NHỎ")
+  // KHUNG PHẢI: DỰ BÁO XÁC SUẤT CỬA LỚN / HÒA / NHỎ (N9:S12)
+  sheet.getRange("N9:S9").merge().setValue("⚖️ DỰ BÁO XÁC SUẤT CỬA LỚN / HÒA / NHỎ")
     .setFontWeight("bold").setBackground("#059669").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange(10, 13, 3, 6).setValues([
+  sheet.getRange(10, 14, 3, 6).setValues([
     ["Nhỏ (3..9)", Number((predSmall * 100).toFixed(2)) + "%", "Lý thuyết: 37.50%", (predSmall * 100 - 37.5 >= 0 ? "+" : "") + (predSmall * 100 - 37.5).toFixed(2) + "%", predSmall > 0.38 ? "Ưu thế tích cực" : "Bình thường", "Tổng 3 đến 9"],
     ["Hòa (10..11)", Number((predTie * 100).toFixed(2)) + "%", "Lý thuyết: 25.00%", (predTie * 100 - 25.0 >= 0 ? "+" : "") + (predTie * 100 - 25.0).toFixed(2) + "%", predTie > 0.26 ? "Ưu thế tích cực" : "Bình thường", "Tổng 10 và 11"],
     ["Lớn (12..18)", Number((predBig * 100).toFixed(2)) + "%", "Lý thuyết: 37.50%", (predBig * 100 - 37.5 >= 0 ? "+" : "") + (predBig * 100 - 37.5).toFixed(2) + "%", predBig > 0.38 ? "Ưu thế tích cực" : "Bình thường", "Tổng 12 đến 18"]
   ]).setHorizontalAlignment("center");
-  sheet.getRange(10, 13, 3, 1).setFontWeight("bold");
+  sheet.getRange(10, 14, 3, 1).setFontWeight("bold");
 
-  // KHUNG PHẢI: NGUYÊN TẮC KHOA HỌC & QUẢN TRỊ RỦI RO (M14:R17)
-  sheet.getRange("M14:R14").merge().setValue("⚠️ NGUYÊN TẮC KHOA HỌC & QUẢN TRỊ RỦI RO")
+  // KHUNG PHẢI: NGUYÊN TẮC KHOA HỌC & QUẢN TRỊ RỦI RO (N14:S17)
+  sheet.getRange("N14:S14").merge().setValue("⚠️ NGUYÊN TẮC KHOA HỌC & QUẢN TRỊ RỦI RO")
     .setFontWeight("bold").setBackground("#DC2626").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange(15, 13, 1, 6).merge().setValue("1. Giả thuyết H0: Xúc xắc công bằng, mỗi kỳ quay là độc lập ngẫu nhiên.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
-  sheet.getRange(16, 13, 1, 6).merge().setValue("2. Đa tầng hóa: Đánh Dải 3 Tổng (~37%) và Mặt xúc xắc (~42%) để giảm thiểu tối đa rủi ro lệch số.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
-  sheet.getRange(17, 13, 1, 6).merge().setValue("3. Tuyệt đối không gấp thếp (Martingale). Chỉ phân bổ vốn theo điểm tin cậy.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
+  sheet.getRange(15, 14, 1, 6).merge().setValue("1. Giả thuyết H0: Xúc xắc công bằng, mỗi kỳ quay là độc lập ngẫu nhiên.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
+  sheet.getRange(16, 14, 1, 6).merge().setValue("2. Đa tầng hóa: Đánh Dải 3 Tổng (~37%) và Mặt xúc xắc (~42%) để giảm thiểu tối đa rủi ro lệch số.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
+  sheet.getRange(17, 14, 1, 6).merge().setValue("3. Tuyệt đối không gấp thếp (Martingale). Quản trị vốn nghiêm ngặt theo khuyến nghị Kelly.").setFontSize(9).setFontColor("#475569").setHorizontalAlignment("left");
 
   // -----------------------------------------------------------------------
-  // BẢNG DỰ ĐOÁN ĐA TẦNG & TỐI ƯU HIỆU SUẤT TRÚNG (CỘT 1 ĐẾN 11: A..K)
+  // BẢNG DỰ ĐOÁN ĐA TẦNG & QUẢN TRỊ TÀI CHÍNH (CỘT 1 ĐẾN 12: A..L)
   // -----------------------------------------------------------------------
   var refDateStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
   var todayDraws = [];
@@ -928,7 +928,6 @@ function updatePredictionSheet() {
   todayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
   var totalTodayDraws = todayDraws.length;
 
-  // Tính Current Gaps (Số kỳ liên tiếp chưa về tính đến hiện tại)
   var currentGaps = {};
   for (var sg = 3; sg <= 18; sg++) {
     currentGaps[sg] = (lastSeenSum[sg] === null) ? totalTodayDraws : (totalTodayDraws - 1 - lastSeenSum[sg]);
@@ -938,9 +937,8 @@ function updatePredictionSheet() {
     currentDiceGaps[dg] = (lastSeenDice[dg] === null) ? totalTodayDraws : (totalTodayDraws - 1 - lastSeenDice[dg]);
   }
 
-  // Tỷ lệ các Cửa hôm nay
   var isLateSession = (totalTodayDraws >= 120);
-  var numTableCols = 11; // 11 cột đa tầng toàn diện (A đến K)
+  var numTableCols = 12; // 12 cột: A đến L (thêm Lãi/Lỗ kỳ và Số dư tích lũy)
 
   var todaySmallCount = 0, todayTieCount = 0, todayBigCount = 0;
   for (var sc = 3; sc <= 18; sc++) {
@@ -958,7 +956,6 @@ function updatePredictionSheet() {
   var deltaTie = pTieAct - 0.25;
   var deltaBig = pBigAct - 0.375;
 
-  // HỆ SỐ TÁI CÂN BẰNG QUOTA CHO 16 BỘ TỔNG
   var rebalanceStrength = isLateSession ? 0.70 : (totalTodayDraws >= 80 ? 0.35 : 0.10);
   var quotaModifiers = {};
   var sideModifiers = {};
@@ -986,7 +983,6 @@ function updatePredictionSheet() {
     sideModifiers[sm] = sMod;
   }
 
-  // HÀM DỰ ĐOÁN ĐA TẦNG TOÀN DIỆN (TỔNG TRỌNG TÂM, DẢI 3 TỔNG, CỬA, VIÊN CHỦ LỰC, ĐỘ TIN CẬY)
   function predictMultiStep(priorSum, steps, applyRebalance) {
     var preds = [];
     var curS = priorSum;
@@ -1021,11 +1017,9 @@ function updatePredictionSheet() {
         bestCand = ensembleList[(st - 1) % ensembleList.length].sum;
       }
 
-      // 1. Dải 3 Tổng bọc lót (Cluster Triplet)
       var clusterList = [Math.max(3, bestCand - 1), bestCand, Math.min(18, bestCand + 1)];
       var clusterText = "[" + clusterList[0] + ", " + clusterList[1] + ", " + clusterList[2] + "]";
 
-      // 2. Dự đoán Cửa
       var pureSide = (bestCand <= 9) ? "Nhỏ" : ((bestCand <= 11) ? "Hòa" : "Lớn");
       var candSide = (bestCand <= 9) ? "Nhỏ (3..9)" : ((bestCand <= 11) ? "Hòa (10..11)" : "Lớn (12..18)");
       if (applyRebalance && isLateSession) {
@@ -1035,7 +1029,6 @@ function updatePredictionSheet() {
         candSide += isLagging ? " 🎯 [Hồi quy]" : " 🎯";
       }
 
-      // 3. Viên xúc xắc chủ lực (1..6)
       var combo = BEST_DICE_COMBO[bestCand] || [3, 4, 4];
       var bestD = combo[1];
       var maxDVal = -1;
@@ -1046,7 +1039,6 @@ function updatePredictionSheet() {
       }
       var diceText = "Mặt số " + bestD + " (42.1%)";
 
-      // 4. Độ tin cậy & Đề xuất lệnh (Kelly Staking Filter)
       var topEnsP = ensembleList[0].pEnsemble;
       var markovDom = markovTotal >= 5 ? (markovTrans[bestCand] / markovTotal) : 0.125;
       var confScore = Math.min(95, Math.max(50, Math.round(topEnsP * 3.2 + markovDom * 90 + (clusterList.indexOf(ensembleList[0].sum) >= 0 ? 15 : 0))));
@@ -1083,14 +1075,93 @@ function updatePredictionSheet() {
     return preds;
   }
 
+  // TÍNH TOÁN DÒNG TIỀN THEO KỊCH BẢN 3 (KELLY STAKING 10.000 Đ/LỆNH CHUẨN)
+  var BINGO18_SUM_PAYOUTS = {
+    3: 120.0, 4: 40.0, 5: 20.0, 6: 12.0, 7: 8.0, 8: 5.5, 9: 4.7,
+    10: 4.4, 11: 4.4, 12: 4.7, 13: 5.5, 14: 8.0, 15: 12.0, 16: 20.0,
+    17: 40.0, 18: 120.0
+  };
+
+  function formatVND(amt) {
+    var sgn = amt > 0 ? "+" : (amt < 0 ? "-" : "");
+    var abs = Math.abs(Math.round(amt));
+    return sgn + abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ";
+  }
+
+  var chronFinancials = [];
+  var runningBalance = 0;
+  var totalCostToday = 0;
+  var totalPayoutToday = 0;
+  var totalActiveK = 0;
+  var totalSkipK = 0;
+
+  for (var ck = 0; ck < todayDraws.length; ck++) {
+    var prevTotCk = (ck > 0) ? todayDraws[ck - 1].total : 10;
+    var pItemCk = predictMultiStep(prevTotCk, 1, isLateSession)[0];
+    var curDrawCk = todayDraws[ck];
+
+    var mult = 1;
+    if (pItemCk.confScore >= 78) mult = 2;
+    else if (pItemCk.confScore < 60) mult = 0;
+
+    var costCk = mult * 50000;
+    var payoutCk = 0;
+
+    if (mult > 0) {
+      totalActiveK++;
+      var unitTicket = mult * 10000;
+      var actTotalCk = curDrawCk.total;
+      var actSideCk = (actTotalCk <= 9) ? "Nhỏ" : ((actTotalCk <= 11) ? "Hòa" : "Lớn");
+      var actDicesCk = [curDrawCk.d1, curDrawCk.d2, curDrawCk.d3];
+
+      // 1. Cược Cửa
+      if (actSideCk === pItemCk.pureSide) {
+        payoutCk += unitTicket * (pItemCk.pureSide === "Hòa" ? 2.0 : 1.5);
+      }
+
+      // 2. Cược Viên xúc xắc chủ lực
+      var matchDiceCnt = 0;
+      for (var dck = 0; dck < 3; dck++) {
+        if (actDicesCk[dck] === pItemCk.dice) matchDiceCnt++;
+      }
+      if (matchDiceCnt === 1) payoutCk += unitTicket * 1.2;
+      else if (matchDiceCnt === 2) payoutCk += unitTicket * 2.0;
+      else if (matchDiceCnt === 3) payoutCk += unitTicket * 3.0;
+
+      // 3. Cược Dải 3 Tổng bọc lót
+      if (pItemCk.cluster.indexOf(actTotalCk) >= 0) {
+        var sMult = BINGO18_SUM_PAYOUTS[actTotalCk] || 4.4;
+        payoutCk += unitTicket * sMult;
+      }
+    } else {
+      totalSkipK++;
+    }
+
+    var pnlCk = payoutCk - costCk;
+    totalCostToday += costCk;
+    totalPayoutToday += payoutCk;
+    runningBalance += pnlCk;
+
+    chronFinancials.push({
+      mult: mult,
+      cost: costCk,
+      payout: payoutCk,
+      pnl: pnlCk,
+      cumBalance: runningBalance
+    });
+  }
+
+  var totalNetPnl = totalPayoutToday - totalCostToday;
+  var totalNetRoi = totalCostToday > 0 ? (totalNetPnl / totalCostToday) * 100 : 0;
+
   // BANNER VÀ SUBTITLE BẢNG DỰ ĐOÁN
-  sheet.getRange(22, 1, 1, 11).merge().setValue("🔮 BẢNG DỰ ĐOÁN ĐA TẦNG & TỐI ƯU TỶ LỆ TRÚNG CAO NHẤT HÔM NAY (" + refDateStr + ")")
+  sheet.getRange(22, 1, 1, 12).merge().setValue("🔮 BẢNG DỰ ĐOÁN ĐA TẦNG & QUẢN TRỊ TÀI CHÍNH HÔM NAY (" + refDateStr + ")")
     .setFontWeight("bold").setFontSize(13).setBackground("#1E293B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange(23, 1, 1, 11).merge().setValue("🎯 Tối ưu xác suất: Dải 3 Tổng (~37% - 40%) | Cửa Lớn/Hòa/Nhỏ (~37.5%) | Mặt xúc xắc chủ lực (~42.1%) | Bộ lọc Tín hiệu Tin cậy")
+  sheet.getRange(23, 1, 1, 12).merge().setValue("💰 Kịch bản 3: Đánh theo Bộ lọc Kelly (10.000 đ/lệnh) | Dải 3 Tổng (~37%) | Cửa (~37.5%) | Mặt xúc xắc (~42.1%)")
     .setFontStyle("italic").setFontColor("#15803D").setBackground("#DCFCE7").setHorizontalAlignment("center");
 
-  var tableHeaders = [["Mã kỳ", "Giờ quay", "Bộ số gợi ý", "Tổng trọng tâm", "Dải 3 Tổng bọc lót", "Dự đoán Cửa", "Viên chủ lực (1..6)", "Độ tin cậy & Lệnh", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Tỉ lệ trong ngày (%)"]];
-  sheet.getRange(24, 1, 1, 11).setValues(tableHeaders)
+  var tableHeaders = [["Mã kỳ", "Giờ quay", "Bộ số gợi ý", "Tổng trọng tâm", "Dải 3 Tổng bọc lót", "Dự đoán Cửa", "Viên chủ lực (1..6)", "Độ tin cậy & Lệnh", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Lãi/Lỗ kỳ (+/- đ)", "Số dư P&L tích lũy"]];
+  sheet.getRange(24, 1, 1, 12).setValues(tableHeaders)
     .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   // DỰ ĐOÁN 10 KỲ TIẾP THEO (+1 đến +10)
@@ -1123,8 +1194,6 @@ function updatePredictionSheet() {
     var pItem = upcomingPreds[upIdx];
     var upCombo = BEST_DICE_COMBO[pItem.sum] || [3, 4, 4];
     var upComboStr = upCombo[0] + " - " + upCombo[1] + " - " + upCombo[2];
-    var upDayRate = totalTodayDraws > 0 ?
-      ((dailyCounts[pItem.sum] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[pItem.sum] + "/" + totalTodayDraws + " lần)" : "0%";
 
     upcomingRows.push([
       "#" + upIdStr + " [KỲ " + upcomingColors[upIdx].label + "]",
@@ -1137,13 +1206,14 @@ function updatePredictionSheet() {
       pItem.confLabel,
       "⏳ Đang chờ mở thưởng...",
       "⏳ Chờ quay số",
-      upDayRate
+      "⏳ Chờ kết quả",
+      "-"
     ]);
   }
 
-  sheet.getRange(25, 1, 10, 11).setValues(upcomingRows).setHorizontalAlignment("center");
+  sheet.getRange(25, 1, 10, 12).setValues(upcomingRows).setHorizontalAlignment("center");
   for (var upStyleIdx = 0; upStyleIdx < 10; upStyleIdx++) {
-    var rowRange = sheet.getRange(25 + upStyleIdx, 1, 1, 11);
+    var rowRange = sheet.getRange(25 + upStyleIdx, 1, 1, 12);
     rowRange.setBackground(upcomingColors[upStyleIdx].bg).setFontColor(upcomingColors[upStyleIdx].text);
     if (upStyleIdx < 3) {
       rowRange.setFontWeight("bold");
@@ -1154,6 +1224,8 @@ function updatePredictionSheet() {
   var drawRows = [];
   var matchStyles = [];
   var confStyles = [];
+  var pnlStyles = [];
+  var cumStyles = [];
 
   for (var k = todayDraws.length - 1; k >= 0; k--) {
     var cur = todayDraws[k];
@@ -1206,8 +1278,33 @@ function updatePredictionSheet() {
       mColor = "#64748B"; mBg = "#FFFFFF"; isBold = false;
     }
 
-    var dayRateStr = totalTodayDraws > 0 ?
-      ((dailyCounts[cur.total] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[cur.total] + "/" + totalTodayDraws + " lần)" : "0%";
+    // Tài chính của kỳ k
+    var finK = chronFinancials[k];
+    var pnlText = "";
+    var pnlColor = "#475569";
+    var pnlBg = "#FFFFFF";
+
+    if (finK.mult === 0) {
+      pnlText = "⚪ Bỏ qua (0 đ)";
+      pnlColor = "#B45309";
+      pnlBg = "#FEF3C7";
+    } else if (finK.pnl > 0) {
+      pnlText = formatVND(finK.pnl);
+      pnlColor = "#15803D";
+      pnlBg = "#DCFCE7";
+    } else if (finK.pnl < 0) {
+      pnlText = formatVND(finK.pnl);
+      pnlColor = "#DC2626";
+      pnlBg = "#FEF2F2";
+    } else {
+      pnlText = "0 đ";
+      pnlColor = "#475569";
+      pnlBg = "#FFFFFF";
+    }
+
+    var cumText = formatVND(finK.cumBalance);
+    var cumColor = finK.cumBalance >= 0 ? "#15803D" : "#DC2626";
+    var cumBg = finK.cumBalance >= 0 ? "#DCFCE7" : "#FEF2F2";
 
     drawRows.push([
       "#" + cur.draw_id,
@@ -1220,15 +1317,18 @@ function updatePredictionSheet() {
       pItemK.confLabel,
       actualDiceStr,
       matchText,
-      dayRateStr
+      pnlText,
+      cumText
     ]);
 
     matchStyles.push({ color: mColor, bg: mBg, bold: isBold });
     confStyles.push({ color: pItemK.confColor, bg: pItemK.confBg });
+    pnlStyles.push({ color: pnlColor, bg: pnlBg, bold: (finK.pnl !== 0) });
+    cumStyles.push({ color: cumColor, bg: cumBg, bold: true });
   }
 
   if (drawRows.length > 0) {
-    sheet.getRange(35, 1, drawRows.length, 11).setValues(drawRows).setHorizontalAlignment("center");
+    sheet.getRange(35, 1, drawRows.length, 12).setValues(drawRows).setHorizontalAlignment("center");
     sheet.getRange(35, 1, drawRows.length, 1).setNumberFormat("@");
 
     for (var mIdx = 0; mIdx < matchStyles.length; mIdx++) {
@@ -1238,33 +1338,61 @@ function updatePredictionSheet() {
       var mCell = sheet.getRange(35 + mIdx, 10);
       mCell.setFontColor(matchStyles[mIdx].color).setBackground(matchStyles[mIdx].bg);
       if (matchStyles[mIdx].bold) mCell.setFontWeight("bold");
+
+      var pnlCell = sheet.getRange(35 + mIdx, 11);
+      pnlCell.setFontColor(pnlStyles[mIdx].color).setBackground(pnlStyles[mIdx].bg);
+      if (pnlStyles[mIdx].bold) pnlCell.setFontWeight("bold");
+
+      var cumCell = sheet.getRange(35 + mIdx, 12);
+      cumCell.setFontColor(cumStyles[mIdx].color).setBackground(cumStyles[mIdx].bg).setFontWeight("bold");
     }
+
+    // DÒNG TỔNG KẾT TÀI CHÍNH CUỐI BẢNG (FOOTER)
+    var footerRowIdx = 35 + drawRows.length;
+    var footerLabel = "💰 TỔNG KẾT TÀI CHÍNH HÔM NAY (KELLY 10K/LỆNH | VỐN ĐÃ ĐÁNH: " + totalCostToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " Đ | THU VỀ: " + totalPayoutToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " Đ)";
+    sheet.getRange(footerRowIdx, 1, 1, 10).merge().setValue(footerLabel)
+      .setFontWeight("bold").setFontSize(10).setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+
+    var footerPnlCell = sheet.getRange(footerRowIdx, 11);
+    footerPnlCell.setValue(formatVND(totalNetPnl))
+      .setFontWeight("bold").setFontSize(11)
+      .setBackground(totalNetPnl >= 0 ? "#DCFCE7" : "#FEF2F2")
+      .setFontColor(totalNetPnl >= 0 ? "#15803D" : "#DC2626")
+      .setHorizontalAlignment("center");
+
+    var footerRoiCell = sheet.getRange(footerRowIdx, 12);
+    footerRoiCell.setValue((totalNetRoi >= 0 ? "+" : "") + totalNetRoi.toFixed(1) + "% ROI")
+      .setFontWeight("bold").setFontSize(11)
+      .setBackground(totalNetRoi >= 0 ? "#DCFCE7" : "#FEF2F2")
+      .setFontColor(totalNetRoi >= 0 ? "#15803D" : "#DC2626")
+      .setHorizontalAlignment("center");
   }
 
   var curLast = sheet.getLastRow();
-  var neededEnd = 34 + drawRows.length;
+  var neededEnd = 35 + drawRows.length; // bao gồm cả dòng footer
   if (curLast > neededEnd) {
-    sheet.getRange(neededEnd + 1, 1, curLast - neededEnd, 11).clearContent().setBackground(null);
+    sheet.getRange(neededEnd + 1, 1, curLast - neededEnd, 12).clearContent().setBackground(null);
   }
 
-  // Độ rộng cột Bảng Chính A..K (Cols 1..11)
-  sheet.setColumnWidth(1, 140);
-  sheet.setColumnWidth(2, 85);
-  sheet.setColumnWidth(3, 105);
-  sheet.setColumnWidth(4, 105);
-  sheet.setColumnWidth(5, 135);
-  sheet.setColumnWidth(6, 145);
-  sheet.setColumnWidth(7, 135);
+  // Độ rộng cột Bảng Chính A..L (Cols 1..12)
+  sheet.setColumnWidth(1, 135);
+  sheet.setColumnWidth(2, 80);
+  sheet.setColumnWidth(3, 95);
+  sheet.setColumnWidth(4, 95);
+  sheet.setColumnWidth(5, 125);
+  sheet.setColumnWidth(6, 135);
+  sheet.setColumnWidth(7, 125);
   sheet.setColumnWidth(8, 135);
-  sheet.setColumnWidth(9, 150);
-  sheet.setColumnWidth(10, 180);
-  sheet.setColumnWidth(11, 145);
+  sheet.setColumnWidth(9, 140);
+  sheet.setColumnWidth(10, 165);
+  sheet.setColumnWidth(11, 135);
+  sheet.setColumnWidth(12, 145);
 
-  // Cột khoảng cách Spacer (Col 12 - Column L)
-  sheet.setColumnWidth(12, 30);
+  // Cột khoảng cách Spacer (Col 13 - Column M)
+  sheet.setColumnWidth(13, 30);
 
   // -----------------------------------------------------------------------
-  // BẢNG 1: THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH ĐA TẦNG HÔM NAY (M19:R25)
+  // BẢNG 1: THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH & DÒNG TIỀN ĐA TẦNG (N19:S26)
   // -----------------------------------------------------------------------
   var hitSumCount = 0;
   var hitClusterCount = 0;
@@ -1294,7 +1422,7 @@ function updatePredictionSheet() {
   var sideHitRate = totalVerifiedDraws > 0 ? (hitSideCount / totalVerifiedDraws) * 100 : 0;
   var diceHitRate = totalVerifiedDraws > 0 ? (hitDiceCount / totalVerifiedDraws) * 100 : 0;
 
-  sheet.getRange("M19:R19").merge().setValue("🎯 BẢNG THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH ĐA TẦNG HÔM NAY")
+  sheet.getRange("N19:S19").merge().setValue("🎯 BẢNG THỐNG KÊ HIỆU SUẤT TRÚNG LỆNH & DÒNG TIỀN ĐA TẦNG")
     .setFontWeight("bold").setBackground("#1E1B4B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var perfRows = [
@@ -1302,26 +1430,28 @@ function updatePredictionSheet() {
     ["1. Trúng Tổng Trọng Tâm", hitSumCount + " kỳ", "Hiệu suất: " + sumHitRate.toFixed(1) + "%", "H0: ~8.0%", (sumHitRate - 8.0 >= 0 ? "+" : "") + (sumHitRate - 8.0).toFixed(1) + "%", sumHitRate >= 8.0 ? "🔥 Vượt kỳ vọng" : "Bình thường"],
     ["2. Trúng Dải 3 Tổng bọc lót", hitClusterCount + " kỳ", "Hiệu suất: " + clusterHitRate.toFixed(1) + "%", "H0: ~36.6%", (clusterHitRate - 36.6 >= 0 ? "+" : "") + (clusterHitRate - 36.6).toFixed(1) + "%", clusterHitRate >= 36.6 ? "🔥 Vượt trội (Cao)" : "Bình thường"],
     ["3. Trúng Cửa Lớn / Hòa / Nhỏ", hitSideCount + " kỳ", "Hiệu suất: " + sideHitRate.toFixed(1) + "%", "H0: ~37.5%", (sideHitRate - 37.5 >= 0 ? "+" : "") + (sideHitRate - 37.5).toFixed(1) + "%", sideHitRate >= 37.5 ? "🔥 Ưu thế tích cực" : "Bình thường"],
-    ["4. Trúng Mặt xúc xắc chủ lực", hitDiceCount + " kỳ", "Hiệu suất: " + diceHitRate.toFixed(1) + "%", "H0: ~42.1%", (diceHitRate - 42.1 >= 0 ? "+" : "") + (diceHitRate - 42.1).toFixed(1) + "%", diceHitRate >= 42.1 ? "🔥 Điểm tựa vững chắc" : "Bình thường"]
+    ["4. Trúng Mặt xúc xắc chủ lực", hitDiceCount + " kỳ", "Hiệu suất: " + diceHitRate.toFixed(1) + "%", "H0: ~42.1%", (diceHitRate - 42.1 >= 0 ? "+" : "") + (diceHitRate - 42.1).toFixed(1) + "%", diceHitRate >= 42.1 ? "🔥 Điểm tựa vững chắc" : "Bình thường"],
+    ["Tổng tiền cược hôm nay", totalCostToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ", "Tổng tiền thưởng thu về", totalPayoutToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ", (totalNetRoi >= 0 ? "+" : "") + totalNetRoi.toFixed(1) + "% ROI", (totalNetPnl >= 0 ? "🔥 Đang có lãi" : "Bảo toàn vốn")]
   ];
-  sheet.getRange(20, 13, 5, 6).setValues(perfRows).setHorizontalAlignment("center");
-  sheet.getRange(20, 13, 5, 1).setFontWeight("bold").setHorizontalAlignment("left");
-  sheet.getRange(20, 15, 5, 1).setFontWeight("bold").setHorizontalAlignment("left");
+  sheet.getRange(20, 14, 6, 6).setValues(perfRows).setHorizontalAlignment("center");
+  sheet.getRange(20, 14, 6, 1).setFontWeight("bold").setHorizontalAlignment("left");
+  sheet.getRange(20, 16, 6, 1).setFontWeight("bold").setHorizontalAlignment("left");
 
-  sheet.getRange(25, 13, 1, 3).merge().setValue("Đánh giá tổng quan hiệu suất đa tầng hôm nay").setFontWeight("bold").setHorizontalAlignment("left");
-  var multiStatusText = (clusterHitRate >= 36.6 || sideHitRate >= 38.0 || diceHitRate >= 42.0) ? "🟢 HIỆU SUẤT ĐA TẦNG RẤT TỐT (GIỮ NHỊP CHIẾN THẮNG)" : "🟡 THEO SÁT PHÂN PHỐI LÝ THUYẾT";
-  sheet.getRange(25, 16, 1, 3).merge().setValue(multiStatusText).setFontWeight("bold").setHorizontalAlignment("center")
-    .setBackground((clusterHitRate >= 36.6 || sideHitRate >= 38.0 || diceHitRate >= 42.0) ? "#DCFCE7" : "#FEF3C7")
-    .setFontColor((clusterHitRate >= 36.6 || sideHitRate >= 38.0 || diceHitRate >= 42.0) ? "#15803D" : "#B45309");
+  sheet.getRange(26, 14, 1, 3).merge().setValue("Lợi nhuận ròng tài chính (P&L thực tế)").setFontWeight("bold").setHorizontalAlignment("left");
+  sheet.getRange(26, 17, 1, 3).merge()
+    .setValue((totalNetPnl >= 0 ? "+" : "") + totalNetPnl.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ (" + (totalNetRoi >= 0 ? "+" : "") + totalNetRoi.toFixed(1) + "% ROI)")
+    .setFontWeight("bold").setHorizontalAlignment("center")
+    .setBackground(totalNetPnl >= 0 ? "#DCFCE7" : "#FEF2F2")
+    .setFontColor(totalNetPnl >= 0 ? "#15803D" : "#DC2626");
 
   // -----------------------------------------------------------------------
-  // BẢNG 2: TẦN SUẤT 16 TỔNG & MÁY QUÉT CHUỖI TRỄ (GAP TRACKER) (M27:R45)
+  // BẢNG 2: TẦN SUẤT 16 TỔNG & MÁY QUÉT CHUỖI TRỄ (GAP TRACKER) (N28:S46)
   // -----------------------------------------------------------------------
-  sheet.getRange("M27:R27").merge().setValue("📊 TẦN SUẤT 16 TỔNG & MÁY QUÉT CHUỖI TRỄ (GAP TRACKER)")
+  sheet.getRange("N28:S28").merge().setValue("📊 TẦN SUẤT 16 TỔNG & MÁY QUÉT CHUỖI TRỄ (GAP TRACKER)")
     .setFontWeight("bold").setBackground("#065F46").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var table2Headers = [["Tổng", "Số lượt về", "Tỉ lệ hôm nay (%)", "Chu kỳ chuẩn", "Số kỳ chưa về (Gap)", "Trạng thái nhịp nổ"]];
-  sheet.getRange(28, 13, 1, 6).setValues(table2Headers)
+  sheet.getRange(29, 14, 1, 6).setValues(table2Headers)
     .setFontWeight("bold").setBackground("#047857").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var sumCompRows = [];
@@ -1359,33 +1489,33 @@ function updatePredictionSheet() {
     trendColors.push({ color: trColor, bg: trBg });
   }
 
-  sheet.getRange(29, 13, 16, 6).setValues(sumCompRows).setHorizontalAlignment("center");
+  sheet.getRange(30, 14, 16, 6).setValues(sumCompRows).setHorizontalAlignment("center");
   for (var tIdx = 0; tIdx < trendColors.length; tIdx++) {
-    var cRange = sheet.getRange(29 + tIdx, 18);
+    var cRange = sheet.getRange(30 + tIdx, 19);
     cRange.setFontColor(trendColors[tIdx].color).setBackground(trendColors[tIdx].bg);
     if (trendColors[tIdx].bg !== "#FFFFFF") cRange.setFontWeight("bold");
   }
 
   // Dòng Tổng cộng Bảng 2
   var totalRow = [["TỔNG CỘNG", totalVerifiedDraws, "100.0%", "-", "-", "-"]];
-  sheet.getRange(45, 13, 1, 6).setValues(totalRow)
+  sheet.getRange(46, 14, 1, 6).setValues(totalRow)
     .setFontWeight("bold").setBackground("#F1F5F9").setHorizontalAlignment("center");
 
   // -----------------------------------------------------------------------
-  // BẢNG 3: CHIẾN LƯỢC SĂN TỔNG & CỬA 2 GIỜ CUỐI NGÀY (M47:R54)
+  // BẢNG 3: CHIẾN LƯỢC SĂN TỔNG & CỬA 2 GIỜ CUỐI NGÀY (N48:S55)
   // -----------------------------------------------------------------------
-  sheet.getRange("M47:R47").merge().setValue("⚡ CHIẾN LƯỢC SĂN TỔNG & CỬA 2 GIỜ CUỐI NGÀY (20:00 - 22:00)")
+  sheet.getRange("N48:S48").merge().setValue("⚡ CHIẾN LƯỢC SĂN TỔNG & CỬA 2 GIỜ CUỐI NGÀY (20:00 - 22:00)")
     .setFontWeight("bold").setBackground("#7C2D12").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var b3Status = isLateSession ?
     "🟢 ĐANG KÍCH HOẠT: Đã đủ mẫu (" + totalTodayDraws + "/120 kỳ). Tự động lọc Quota & Cửa hồi quy." :
     "⏳ CHẾ ĐỘ CHỜ: Đang tích lũy mẫu (" + totalTodayDraws + "/120 kỳ). Sẽ tự kích hoạt sau kỳ 120 (khoảng 20:00).";
-  sheet.getRange(48, 13, 1, 6).merge().setValue(b3Status)
+  sheet.getRange(49, 14, 1, 6).merge().setValue(b3Status)
     .setFontStyle("italic").setFontSize(9).setBackground(isLateSession ? "#DCFCE7" : "#FEF3C7")
     .setFontColor(isLateSession ? "#15803D" : "#B45309").setHorizontalAlignment("center");
 
   var table3Headers = [["Hạng mục phân tích", "Tổng / Cửa đối tượng", "Tỉ lệ hôm nay", "Lệch vs H0", "Khuyến nghị hành động", "Mức ưu tiên"]];
-  sheet.getRange(49, 13, 1, 6).setValues(table3Headers)
+  sheet.getRange(50, 14, 1, 6).setValues(table3Headers)
     .setFontWeight("bold").setBackground("#9A3412").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var sideCandidates = [
@@ -1431,22 +1561,22 @@ function updatePredictionSheet() {
     ["Tổng thiếu hụt Quota", underQuotaStr, "-", "< -1.5% vs H0", "🎯 Ưu tiên săn nổ bù hồi quy", "Mức 2 (Tiềm năng)"],
     ["Bộ 3 Tổng khuyên đánh 2h cuối", topRebalStr, "-", "Đã cân bằng", "🔥 Tối ưu xác suất & bù quota", "Khuyên dùng"]
   ];
-  sheet.getRange(50, 13, 4, 6).setValues(b3Rows).setHorizontalAlignment("center");
-  sheet.getRange(50, 13, 4, 1).setFontWeight("bold").setHorizontalAlignment("left");
-  sheet.getRange(50, 14, 4, 1).setFontWeight("bold");
+  sheet.getRange(51, 14, 4, 6).setValues(b3Rows).setHorizontalAlignment("center");
+  sheet.getRange(51, 14, 4, 1).setFontWeight("bold").setHorizontalAlignment("left");
+  sheet.getRange(51, 15, 4, 1).setFontWeight("bold");
 
-  sheet.getRange(54, 13, 1, 6).merge()
+  sheet.getRange(55, 14, 1, 6).merge()
     .setValue("💡 Gợi ý danh mục Core & Satellite: Đặt 70% vốn vào Cửa hồi quy, 30% bọc lót vào Tổng nổ to (như 7, 8, 13, 14). Đảm bảo giữ vốn bền vững.")
     .setFontSize(9).setFontStyle("italic").setFontColor("#64748B").setHorizontalAlignment("left");
 
   // -----------------------------------------------------------------------
-  // BẢNG 4: RADAR NHIỆT ĐỘ 6 MẶT XÚC XẮC (1..6) HÔM NAY (M56:R63)
+  // BẢNG 4: RADAR NHIỆT ĐỘ 6 MẶT XÚC XẮC (1..6) HÔM NAY (N57:S65)
   // -----------------------------------------------------------------------
-  sheet.getRange("M56:R56").merge().setValue("🎲 BẢNG 4: RADAR NHIỆT ĐỘ 6 MẶT XÚC XẮC (1..6) HÔM NAY")
+  sheet.getRange("N57:S57").merge().setValue("🎲 BẢNG 4: RADAR NHIỆT ĐỘ 6 MẶT XÚC XẮC (1..6) HÔM NAY")
     .setFontWeight("bold").setBackground("#312E81").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var table4Headers = [["Mặt xúc xắc", "Số lần nổ (viên)", "Tần suất thực tế (%)", "Kỳ vọng H0 (16.7%)", "Số kỳ chưa về (Gap)", "Đánh giá nhiệt độ"]];
-  sheet.getRange(57, 13, 1, 6).setValues(table4Headers)
+  sheet.getRange(58, 14, 1, 6).setValues(table4Headers)
     .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
   var totalDicesRolled = totalVerifiedDraws * 3;
@@ -1482,25 +1612,25 @@ function updatePredictionSheet() {
     diceTrendColors.push({ color: dColor, bg: dBg });
   }
 
-  sheet.getRange(58, 13, 6, 6).setValues(diceTableRows).setHorizontalAlignment("center");
+  sheet.getRange(59, 14, 6, 6).setValues(diceTableRows).setHorizontalAlignment("center");
   for (var dt = 0; dt < diceTrendColors.length; dt++) {
-    var dtCell = sheet.getRange(58 + dt, 18);
+    var dtCell = sheet.getRange(59 + dt, 19);
     dtCell.setFontColor(diceTrendColors[dt].color).setBackground(diceTrendColors[dt].bg);
     if (diceTrendColors[dt].bg !== "#FFFFFF") dtCell.setFontWeight("bold");
   }
 
   // Dòng Tổng cộng Bảng 4
   var totalDiceRow = [["TỔNG CỘNG 6 MẶT", totalDicesRolled + " viên", "100.0%", "100.0%", "-", "-"]];
-  sheet.getRange(64, 13, 1, 6).setValues(totalDiceRow)
+  sheet.getRange(65, 14, 1, 6).setValues(totalDiceRow)
     .setFontWeight("bold").setBackground("#F1F5F9").setHorizontalAlignment("center");
 
-  // Định dạng độ rộng cột bảng phụ M..R (Cols 13..18)
-  sheet.setColumnWidth(13, 130);
-  sheet.setColumnWidth(14, 110);
-  sheet.setColumnWidth(15, 140);
+  // Định dạng độ rộng cột bảng phụ N..S (Cols 14..19)
+  sheet.setColumnWidth(14, 130);
+  sheet.setColumnWidth(15, 110);
   sheet.setColumnWidth(16, 140);
   sheet.setColumnWidth(17, 140);
-  sheet.setColumnWidth(18, 180);
+  sheet.setColumnWidth(18, 140);
+  sheet.setColumnWidth(19, 180);
 }
 
 // -------------------------------------------------------------------------
