@@ -181,11 +181,15 @@ function repairAndStandardizeChiTietSheet() {
     var numRows = lastRow - 1;
     var rawValues = sheet.getRange(2, 1, numRows, 9).getValues();
     var cleanedRows = [];
+    var seenMap = {};
 
     for (var r = 0; r < rawValues.length; r++) {
       var row = rawValues[r];
       var rawId = String(row[0]).trim();
       var cleanId = rawId.replace("#", "").trim().padStart(7, "0");
+      if (!cleanId || cleanId === "0000000") continue;
+      if (seenMap[cleanId]) continue;
+      seenMap[cleanId] = true;
 
       var col2Str = String(row[1] || "").trim();
       var col3Str = String(row[2] || "").trim();
@@ -200,7 +204,7 @@ function repairAndStandardizeChiTietSheet() {
       } else if (col3Str.match(/^\d{4}-\d{2}-\d{2}$/)) {
         cleanDate = col3Str;
       } else {
-        cleanDate = col2Str.substring(0, 10);
+        cleanDate = col2Str.substring(0, 10) || "2026-11-10";
       }
 
       var slotVal = Number(row[3] || 0);
@@ -244,14 +248,18 @@ function repairAndStandardizeChiTietSheet() {
       ]);
     }
 
+    // Sắp xếp tăng dần tuyệt đối theo Mã kỳ (đảm bảo thứ tự thời gian chuẩn xác 100%)
+    cleanedRows.sort(function(a, b) { return Number(a[0]) - Number(b[0]); });
+
+    sheet.getRange(2, 1, numRows, 9).clearContent();
     sheet.getRange(2, 1, cleanedRows.length, 9).setValues(cleanedRows);
 
-    sheet.getRange(2, 1, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
-    sheet.getRange(2, 2, numRows, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
-    sheet.getRange(2, 3, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
-    sheet.getRange(2, 4, numRows, 1).setNumberFormat("#,##0").setHorizontalAlignment("center");
-    sheet.getRange(2, 5, numRows, 4).setNumberFormat("#,##0").setHorizontalAlignment("center");
-    sheet.getRange(2, 9, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
+    sheet.getRange(2, 1, cleanedRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
+    sheet.getRange(2, 2, cleanedRows.length, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
+    sheet.getRange(2, 3, cleanedRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
+    sheet.getRange(2, 4, cleanedRows.length, 1).setNumberFormat("#,##0").setHorizontalAlignment("center");
+    sheet.getRange(2, 5, cleanedRows.length, 4).setNumberFormat("#,##0").setHorizontalAlignment("center");
+    sheet.getRange(2, 9, cleanedRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
   }
 
   sheet.setFrozenRows(1);
@@ -291,7 +299,7 @@ function autoSyncVietlottJob(isManual) {
       }
     }
 
-    var fetchRes = fetchLatestDrawsFromSources(existingIds);
+    var fetchRes = fetchLatestDrawsFromSources(existingIds, maxCurrentId);
     var newRecords = fetchRes.records || [];
     var sourceName = fetchRes.source || "Vietlott/GitHub";
     var toAppend = [];
@@ -299,27 +307,31 @@ function autoSyncVietlottJob(isManual) {
     for (var j = 0; j < newRecords.length; j++) {
       var r = newRecords[j];
       var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
-      if (rId && !existingIds[rId]) {
-        var numId = Number(rId);
-        var slot = (r.date === "2026-11-10" && numId >= 195421) ? (numId - 195420) : (Number(r.slot_in_day) || 1);
-        if (slot < 1) slot = 1;
-        if (slot > 159) slot = 159;
-        var drawTime = formatSlotTime(slot);
+      var numId = Number(rId);
 
-        toAppend.push([
-          rId,
-          r.date,
-          drawTime,
-          slot,
-          Number(r.d1),
-          Number(r.d2),
-          Number(r.d3),
-          Number(r.total),
-          r.result || (r.d1 + " " + r.d2 + " " + r.d3 + " " + r.total)
-        ]);
-        existingIds[rId] = true;
-        if (rId > maxCurrentId) maxCurrentId = rId;
+      // KHÓA CỨNG: Tuyệt đối chỉ nhận kỳ lớn hơn kỳ hiện tại và chưa tồn tại
+      if (!rId || numId <= Number(maxCurrentId) || existingIds[rId]) {
+        continue;
       }
+
+      var slot = (r.date === "2026-11-10" && numId >= 195421) ? (numId - 195420) : (Number(r.slot_in_day) || 1);
+      if (slot < 1) slot = 1;
+      if (slot > 159) slot = 159;
+      var drawTime = formatSlotTime(slot);
+
+      toAppend.push([
+        rId,
+        r.date,
+        drawTime,
+        slot,
+        Number(r.d1),
+        Number(r.d2),
+        Number(r.d3),
+        Number(r.total),
+        r.result || (r.d1 + " " + r.d2 + " " + r.d3 + " " + r.total)
+      ]);
+      existingIds[rId] = true;
+      if (rId > maxCurrentId) maxCurrentId = rId;
     }
 
     var latestAddedId = maxCurrentId;
@@ -362,7 +374,7 @@ function autoSyncVietlottJob(isManual) {
  * Lấy kết quả từ Vietlott với cơ chế đa tầng (Direct AjaxPro -> GitHub Live -> GitHub Monthly)
  * Đảm bảo 100% không bao giờ bị nghẽn dữ liệu
  */
-function fetchLatestDrawsFromSources(existingIds) {
+function fetchLatestDrawsFromSources(existingIds, maxCurrentId) {
   var records = [];
   var seenIds = {};
   if (existingIds) {
@@ -421,6 +433,18 @@ function fetchLatestDrawsFromSources(existingIds) {
           for (var i = 0; i < pageRecords.length; i++) {
             var r = pageRecords[i];
             var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
+            var numId = Number(rId);
+
+            // KHÓA CỨNG: Dừng ngay khi chạm vào kỳ đã có hoặc ngày cũ hơn hôm nay
+            if (maxCurrentId && numId <= Number(maxCurrentId)) {
+              stopPaging = true;
+              break;
+            }
+            if (r.date < todayStr) {
+              stopPaging = true;
+              break;
+            }
+
             if (!seenIds[rId]) {
               seenIds[rId] = true;
               records.push(r);
@@ -428,8 +452,7 @@ function fetchLatestDrawsFromSources(existingIds) {
             }
           }
 
-          var lastInPage = pageRecords[pageRecords.length - 1];
-          if (lastInPage && lastInPage.date < todayStr && page >= 6) {
+          if (stopPaging || newInPageCount === 0) {
             stopPaging = true;
             break;
           }
@@ -852,9 +875,10 @@ function updatePredictionSheet() {
   ]).setFontSize(9).setFontColor("#475569");
 
   // -----------------------------------------------------------------------
-  // BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (DỰ ĐOÁN 3 KỲ TIẾP THEO)
+  // BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (DỰ ĐOÁN 10 KỲ TIẾP THEO)
   // -----------------------------------------------------------------------
-  var refDateStr = extractDateStr(lastRowData[1]);
+  // KHÓA CỨNG: Lấy chính xác ngày hôm nay theo múi giờ Việt Nam
+  var refDateStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
   var todayDraws = [];
   var dailyCounts = {};
   for (var sInit = 3; sInit <= 18; sInit++) dailyCounts[sInit] = 0;
@@ -913,30 +937,39 @@ function updatePredictionSheet() {
 
   sheet.getRange("A22:I22").merge().setValue("🔮 BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (" + refDateStr + ")")
     .setFontWeight("bold").setFontSize(13).setBackground("#1E293B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange("A23:I23").merge().setValue("Hiển thị nổi bật 3 KỲ TIẾP THEO SẮP QUAY (+1, +2, +3) | Chu kỳ chuẩn 6 phút/kỳ (159 kỳ/ngày) khớp 100% thời gian thực")
+  sheet.getRange("A23:I23").merge().setValue("Hiển thị nổi bật 10 KỲ TIẾP THEO (+1 đến +10) bù đắp 42 phút độ trễ công bố | Chu kỳ chuẩn 6 phút/kỳ (159 kỳ/ngày)")
     .setFontStyle("italic").setHorizontalAlignment("center");
 
   var tableHeaders = [["Mã kỳ", "Giờ quay", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng dự đoán", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Tỉ lệ Tổng trong ngày (%)"]];
   sheet.getRange(24, 1, 1, 9).setValues(tableHeaders)
     .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  // DỰ ĐOÁN 3 KỲ TIẾP THEO (+1, +2, +3)
-  var lastDrawNum = Number(lastDrawId);
-  var lastSlot = (refDateStr === "2026-11-10" && lastDrawNum >= 195421) ? (lastDrawNum - 195420) : (totalTodayDraws > 0 ? totalTodayDraws : 1);
-  if (lastSlot < 1) lastSlot = 1;
+  // DỰ ĐOÁN 10 KỲ TIẾP THEO (+1 đến +10)
+  var lastTodayDraw = (totalTodayDraws > 0) ? todayDraws[totalTodayDraws - 1] : null;
+  var lastDrawNum = lastTodayDraw ? Number(lastTodayDraw.draw_id) : (refDateStr === "2026-11-10" ? 195420 : 0);
+  var lastSlot = (refDateStr === "2026-11-10" && lastDrawNum >= 195421) ? (lastDrawNum - 195420) : (totalTodayDraws > 0 ? totalTodayDraws : 0);
+  var lastSumForPred = lastTodayDraw ? lastTodayDraw.total : (lastSum || 10);
 
-  var upcomingPreds = predictMultiStep(lastSum, 3);
+  var upcomingPreds = predictMultiStep(lastSumForPred, 10);
   var upcomingRows = [];
   var upcomingColors = [
-    { bg: "#FEF3C7", text: "#92400E", label: "+1" }, // Kỳ 1: Vàng hổ phách
-    { bg: "#E0E7FF", text: "#3730A3", label: "+2" }, // Kỳ 2: Lam nhạt
-    { bg: "#EDE9FE", text: "#5B21B6", label: "+3" }  // Kỳ 3: Tím nhạt
+    { bg: "#FEF3C7", text: "#92400E", label: "+1 (Sắp quay)" },
+    { bg: "#E0E7FF", text: "#3730A3", label: "+2 (Sắp quay)" },
+    { bg: "#EDE9FE", text: "#5B21B6", label: "+3 (Sắp quay)" },
+    { bg: "#F1F5F9", text: "#1E293B", label: "+4" },
+    { bg: "#F1F5F9", text: "#1E293B", label: "+5" },
+    { bg: "#F8FAFC", text: "#334155", label: "+6" },
+    { bg: "#F8FAFC", text: "#334155", label: "+7" },
+    { bg: "#F8FAFC", text: "#334155", label: "+8" },
+    { bg: "#F8FAFC", text: "#334155", label: "+9" },
+    { bg: "#F8FAFC", text: "#334155", label: "+10" }
   ];
 
-  for (var upIdx = 0; upIdx < 3; upIdx++) {
+  for (var upIdx = 0; upIdx < 10; upIdx++) {
     var upNum = lastDrawNum + upIdx + 1;
     var upIdStr = String(upNum).padStart(7, "0");
-    var upSlot = lastSlot < 159 ? (lastSlot + upIdx + 1) : ((lastSlot + upIdx) % 159 + 1);
+    var upSlot = (lastSlot + upIdx + 1);
+    if (upSlot > 159) upSlot = ((upSlot - 1) % 159) + 1;
     var upTimeStr = formatSlotTime(upSlot);
     var upPredSum = upcomingPreds[upIdx];
     var upCombo = BEST_DICE_COMBO[upPredSum] || [3, 4, 4];
@@ -944,7 +977,7 @@ function updatePredictionSheet() {
       ((dailyCounts[upPredSum] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[upPredSum] + "/" + totalTodayDraws + " lần)" : "0%";
 
     upcomingRows.push([
-      "#" + upIdStr + " [KỲ TIẾP THEO " + upcomingColors[upIdx].label + "]",
+      "#" + upIdStr + " [KỲ " + upcomingColors[upIdx].label + "]",
       upTimeStr,
       upCombo[0],
       upCombo[1],
@@ -956,12 +989,14 @@ function updatePredictionSheet() {
     ]);
   }
 
-  sheet.getRange(25, 1, 1, 9).setValues([upcomingRows[0]])
-    .setFontWeight("bold").setBackground(upcomingColors[0].bg).setFontColor(upcomingColors[0].text).setHorizontalAlignment("center");
-  sheet.getRange(26, 1, 1, 9).setValues([upcomingRows[1]])
-    .setFontWeight("bold").setBackground(upcomingColors[1].bg).setFontColor(upcomingColors[1].text).setHorizontalAlignment("center");
-  sheet.getRange(27, 1, 1, 9).setValues([upcomingRows[2]])
-    .setFontWeight("bold").setBackground(upcomingColors[2].bg).setFontColor(upcomingColors[2].text).setHorizontalAlignment("center");
+  sheet.getRange(25, 1, 10, 9).setValues(upcomingRows).setHorizontalAlignment("center");
+  for (var upStyleIdx = 0; upStyleIdx < 10; upStyleIdx++) {
+    var rowRange = sheet.getRange(25 + upStyleIdx, 1, 1, 9);
+    rowRange.setBackground(upcomingColors[upStyleIdx].bg).setFontColor(upcomingColors[upStyleIdx].text);
+    if (upStyleIdx < 3) {
+      rowRange.setFontWeight("bold");
+    }
+  }
 
   // CÁC KỲ ĐÃ QUAY TRONG NGÀY (SẮP XẾP TỪ KỲ MỚI NHẤT ĐẾN KỲ CŨ NHẤT)
   var drawRows = [];
@@ -1008,17 +1043,23 @@ function updatePredictionSheet() {
   }
 
   if (drawRows.length > 0) {
-    var range = sheet.getRange(28, 1, drawRows.length, 9);
+    var range = sheet.getRange(35, 1, drawRows.length, 9);
     range.setValues(drawRows).setHorizontalAlignment("center");
-    sheet.getRange(28, 1, drawRows.length, 1).setNumberFormat("@");
+    sheet.getRange(35, 1, drawRows.length, 1).setNumberFormat("@");
 
     for (var mIdx = 0; mIdx < matchColors.length; mIdx++) {
-      var cell = sheet.getRange(28 + mIdx, 8);
+      var cell = sheet.getRange(35 + mIdx, 8);
       cell.setFontColor(matchColors[mIdx]);
       if (matchColors[mIdx] === "#15803D") {
         cell.setFontWeight("bold").setBackground("#DCFCE7");
       }
     }
+  }
+
+  var curLast = sheet.getLastRow();
+  var neededEnd = 34 + drawRows.length;
+  if (curLast > neededEnd) {
+    sheet.getRange(neededEnd + 1, 1, curLast - neededEnd, 9).clearContent().setBackground(null);
   }
 
   sheet.setColumnWidth(1, 150);
