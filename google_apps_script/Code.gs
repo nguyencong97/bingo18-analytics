@@ -3,14 +3,16 @@
  * BINGO18 ANALYTICS PRO - HỆ THỐNG ĐÁM MÂY TỰ ĐỘNG 24/7 & DỰ ĐOÁN M16
  * =========================================================================
  * Tính năng chính:
- * 1. Bóc tách trực tiếp Vietlott AjaxPro bằng regex span.bong_tron_bingo
- * 2. Cố định chuẩn 9 cột dữ liệu (Mã kỳ đến Bộ số), loại bỏ cột thừa
- * 3. Nút 1-click '🧹 Chuẩn hóa dữ liệu Sheet Chi tiết' đồng bộ kiểu dữ liệu
- * 4. Tự động hóa 24/7 (Time-driven Trigger mỗi 10 phút, 06:00 - 22:15 VN)
- * 5. Bảng Thống kê & Biểu đồ nhúng đa khung thời gian (Hôm nay, Tuần này, Tuần trước)
- * 6. Bảng Dự đoán Hợp nhất M16 (Markov, Bayes, Hot-500, H0)
- * 7. BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY (Xúc xắc 1-2-3, Tổng dự đoán, Đối chiếu thực tế, Tỉ lệ trong ngày)
- * 8. Tự động đồng bộ khi có thay đổi (autoSyncJob, doPost webhook, và trigger onEdit)
+ * 1. Cào đa trang tự động (Auto-Pagination 1..15 trang) trực tiếp từ cổng Vietlott AjaxPro
+ * 2. Chuẩn hóa chu kỳ 6 phút/kỳ (159 kỳ/ngày, 06:00 đến 21:54) khớp 100% thời gian thực
+ * 3. Cố định chuẩn 9 cột dữ liệu (Mã kỳ đến Bộ số), loại bỏ hoàn toàn cột thừa
+ * 4. Nút 1-click '🧹 Chuẩn hóa dữ liệu Sheet Chi tiết' đồng bộ kiểu dữ liệu toàn bảng
+ * 5. Tự động hóa 24/7 (Time-driven Trigger mỗi 10 phút & trigger onEdit khi sửa tay)
+ * 6. Bảng Thống kê & Biểu đồ nhúng đa khung thời gian (Hôm nay, Tuần này, Tuần trước)
+ * 7. Bảng Dự đoán Hợp nhất M16 (Markov, Bayes Dirichlet, Hot-500, H0)
+ * 8. BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY:
+ *    - Dự đoán nổi bật ÍT NHẤT 3 KỲ TIẾP THEO SẮP QUAY (+1, +2, +3)
+ *    - Liệt kê đầy đủ các kỳ đã mở thưởng trong ngày kèm đối chiếu thực tế và tỉ lệ xuất hiện
  */
 
 // -------------------------------------------------------------------------
@@ -45,10 +47,11 @@ function installAutoJob() {
 
   SpreadsheetApp.getUi().alert(
     "✅ Tự động hóa 24/7 đã kích hoạt thành công!\n\n" +
-    "- Tần suất: Cứ mỗi 10 phút hệ thống sẽ tự động kéo các kỳ quay mới về.\n" +
-    "- Khung giờ: 06:00 đến 22:15 giờ Việt Nam (ngoài giờ này job tự nghỉ để tiết kiệm quota).\n" +
+    "- Tần suất: Cứ mỗi 10 phút hệ thống sẽ tự động quét đa trang và kéo đủ các kỳ quay mới về.\n" +
+    "- Khung giờ: 06:00 đến 22:00 giờ Việt Nam (sau 22:00 job tự nghỉ để tiết kiệm quota).\n" +
+    "- Chu kỳ chuẩn Vietlott: 6 phút/kỳ (159 kỳ/ngày), giờ hiển thị khớp 100% thời gian thực.\n" +
     "- Tự động đồng bộ: Cả 2 sheet Thống kê và Dự đoán sẽ tự động cập nhật ngay khi có kỳ mới!\n" +
-    "- Hệ thống chạy ngầm vĩnh viễn trên đám mây của Google, bạn không cần mở máy hay thao tác gì nữa!"
+    "- Chạy ngầm vĩnh viễn trên đám mây của Google, bạn không cần mở máy hay thao tác gì nữa!"
   );
 }
 
@@ -111,30 +114,21 @@ function standardizeChiTietSheet() {
   var lastCol = sheet.getLastColumn();
   if (lastRow < 1) return;
 
-  // 1. Chuẩn hóa tiêu đề chính xác 9 cột
   var headers = [["Mã kỳ", "Ngày quay", "Giờ", "Slot", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng", "Bộ số"]];
   sheet.getRange(1, 1, 1, 9).setValues(headers)
     .setFontWeight("bold").setBackground("#F18806").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  // Xóa các cột thừa từ cột 10 trở đi (nếu có cột thứ 10 cũ bị ghi đè)
   if (lastCol > 9) {
     sheet.deleteColumns(10, lastCol - 9);
   }
 
-  // 2. Chuẩn hóa kiểu dữ liệu cho toàn bộ các dòng
   if (lastRow > 1) {
     var numRows = lastRow - 1;
-    // Cột A: Mã kỳ dạng Text (giữ đủ 7 chữ số có số 0 ở đầu)
     sheet.getRange(2, 1, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
-    // Cột B: Ngày quay dạng yyyy-mm-dd
     sheet.getRange(2, 2, numRows, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
-    // Cột C: Giờ
     sheet.getRange(2, 3, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
-    // Cột D: Slot
     sheet.getRange(2, 4, numRows, 1).setNumberFormat("#,##0").setHorizontalAlignment("center");
-    // Cột E..H: Xúc xắc 1, 2, 3 và Tổng (Số nguyên)
     sheet.getRange(2, 5, numRows, 4).setNumberFormat("#,##0").setHorizontalAlignment("center");
-    // Cột I: Bộ số dạng Text
     sheet.getRange(2, 9, numRows, 1).setNumberFormat("@").setHorizontalAlignment("center");
   }
 
@@ -142,14 +136,14 @@ function standardizeChiTietSheet() {
 }
 
 // -------------------------------------------------------------------------
-// 4. JOB TỰ ĐỘNG KÉO KẾT QUẢ VIETLOTT (MỖI 10 PHÚT)
+// 4. JOB TỰ ĐỘNG KÉO KẾT QUẢ VIETLOTT (MỖI 10 PHÚT - CÀO ĐA TRANG AUTO-PAGINATION)
 // -------------------------------------------------------------------------
 function autoSyncVietlottJob() {
   try {
     var vnHour = Number(Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "HH"));
     var vnMin = Number(Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "mm"));
-    if (vnHour < 6 || (vnHour >= 22 && vnMin > 15)) {
-      Logger.log("Ngoài khung giờ quay số Vietlott (06:00 - 22:15 VN). Job tạm nghỉ.");
+    if (vnHour < 6 || (vnHour >= 22 && vnMin > 5)) {
+      Logger.log("Ngoài khung giờ quay số Vietlott (06:00 - 22:05 VN). Job tạm nghỉ.");
       return;
     }
 
@@ -160,7 +154,7 @@ function autoSyncVietlottJob() {
     var lastRow = sheet.getLastRow();
     var existingIds = {};
     if (lastRow > 1) {
-      var checkRows = Math.min(300, lastRow - 1);
+      var checkRows = Math.min(500, lastRow - 1);
       var idValues = sheet.getRange(lastRow - checkRows + 1, 1, checkRows, 1).getValues();
       for (var i = 0; i < idValues.length; i++) {
         var rawId = String(idValues[i][0]).trim();
@@ -172,7 +166,7 @@ function autoSyncVietlottJob() {
       }
     }
 
-    var newRecords = fetchLatestDrawsFromSources();
+    var newRecords = fetchLatestDrawsFromSources(existingIds);
     var toAppend = [];
     for (var j = 0; j < newRecords.length; j++) {
       var r = newRecords[j];
@@ -198,7 +192,6 @@ function autoSyncVietlottJob() {
       sheet.getRange(sheet.getLastRow() + 1, 1, toAppend.length, 9).setValues(toAppend);
       Logger.log("Đã thêm thành công " + toAppend.length + " kỳ quay mới vào sheet Chi tiết.");
 
-      // Tự động làm mới cả 2 sheet Thống kê và Dự đoán
       updateStatsAndChartsSheet();
       updatePredictionSheet();
     } else {
@@ -209,29 +202,89 @@ function autoSyncVietlottJob() {
   }
 }
 
-function fetchLatestDrawsFromSources() {
+/**
+ * Lấy kết quả từ Vietlott với cơ chế lặp qua nhiều trang (Auto Pagination)
+ * Dừng ngay khi chạm đến kỳ quay đã có trong existingIds
+ */
+function fetchLatestDrawsFromSources(existingIds) {
   var records = [];
-  
-  // NGUỒN 1: CỔNG CHÍNH THỨC VIETLOTT AJAXPRO
+  var seenIds = {};
+  if (existingIds) {
+    for (var k in existingIds) seenIds[k] = true;
+  }
+
+  // NGUỒN 1: CỔNG CHÍNH THỨC VIETLOTT AJAXPRO (TỰ ĐỘNG ĐA TRANG)
   try {
     var url = "https://vietlott.vn/ajaxpro/Vietlott.PlugIn.WebParts.GameBingoCompareWebPart,Vietlott.PlugIn.WebParts.ashx";
-    var options = {
-      method: "post",
-      headers: {
-        "X-AjaxPro-Method": "ServerSideDrawResult",
-        "Content-Type": "text/plain; charset=UTF-8",
-        "User-Agent": "Mozilla/5.0"
-      },
-      payload: JSON.stringify({ PageIndex: 1, PageSize: 20 }),
-      muteHttpExceptions: true
-    };
-    var resp = UrlFetchApp.fetch(url, options);
-    if (resp.getResponseCode() === 200) {
-      records = parseVietlottAjaxProResponse(resp.getContentText());
-      if (records.length > 0) {
-        Logger.log("Lấy trực tiếp từ Vietlott thành công: " + records.length + " kỳ.");
-        return records;
+    var maxPages = 15; // Mỗi trang 6 kỳ -> quét tối đa 90 kỳ gần nhất
+    var stopPaging = false;
+
+    for (var page = 1; page <= maxPages; page++) {
+      if (stopPaging) break;
+
+      var payload = JSON.stringify({
+        ORenderInfo: {
+          SiteId: "main.frontend.vi",
+          SiteAlias: "main.vi",
+          SiteLang: "vi",
+          SiteName: "Vietlott"
+        },
+        GameId: "8",
+        GameDrawNo: "",
+        number: "",
+        DrawDate: "",
+        PageIndex: page,
+        TotalRow: 10
+      });
+
+      var options = {
+        method: "post",
+        headers: {
+          "X-AjaxPro-Method": "ServerSideDrawResult",
+          "Content-Type": "text/plain; charset=UTF-8",
+          "Origin": "https://vietlott.vn",
+          "Referer": "https://vietlott.vn/vi/trung-thuong/ket-qua-trung-thuong/winning-number-bingo18",
+          "User-Agent": "Mozilla/5.0"
+        },
+        payload: payload,
+        muteHttpExceptions: true
+      };
+
+      var resp = UrlFetchApp.fetch(url, options);
+      if (resp.getResponseCode() === 200) {
+        var pageRecords = parseVietlottAjaxProResponse(resp.getContentText());
+        if (!pageRecords || pageRecords.length === 0) {
+          stopPaging = true;
+          break;
+        }
+
+        var newInPageCount = 0;
+        for (var i = 0; i < pageRecords.length; i++) {
+          var r = pageRecords[i];
+          var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
+          if (!seenIds[rId]) {
+            seenIds[rId] = true;
+            records.push(r);
+            newInPageCount++;
+          } else {
+            // Đã chạm đến kỳ quay đã có sẵn trong bảng, dừng quét
+            stopPaging = true;
+          }
+        }
+
+        if (newInPageCount === 0) {
+          stopPaging = true;
+          break;
+        }
+      } else {
+        Logger.log("Page " + page + " HTTP error: " + resp.getResponseCode());
+        break;
       }
+    }
+
+    if (records.length > 0) {
+      Logger.log("Lấy trực tiếp từ Vietlott thành công qua đa trang: " + records.length + " kỳ mới.");
+      return records;
     }
   } catch (e) {
     Logger.log("Fetch Vietlott direct failed: " + e);
@@ -259,8 +312,17 @@ function fetchLatestDrawsFromSources() {
 function parseVietlottAjaxProResponse(rawText) {
   var records = [];
   try {
-    var jsonMatch = rawText.match(/\"HtmlContent\":\"([^\"]+)\"/);
-    var html = jsonMatch ? jsonMatch[1].replace(/\\\"/g, '"').replace(/\\r\\n/g, '') : rawText;
+    var html = "";
+    try {
+      var json = JSON.parse(rawText);
+      var val = json.value || json;
+      html = (typeof val === "object" && val.HtmlContent) ? val.HtmlContent : (typeof val === "string" ? val : "");
+    } catch (ej) {
+      var jsonMatch = rawText.match(/"HtmlContent":"([^"]+)"/);
+      html = jsonMatch ? jsonMatch[1].replace(/\\"/g, '"').replace(/\\r\\n/g, '') : rawText;
+    }
+
+    if (!html) return records;
 
     var rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     var match;
@@ -271,7 +333,6 @@ function parseVietlottAjaxProResponse(rawText) {
       var idMatch = rowHtml.match(/#(\d{7})/);
       var dateMatch = rowHtml.match(/(\d{2})\/(\d{2})\/(\d{4})/);
 
-      // BÓC TÁCH CHÍNH XÁC 3 VIÊN XÚC XẮC TỪ THẺ SPAN.BONG_TRON_BINGO
       var diceRegex = /<span[^>]*bong_tron_bingo[^>]*>(\d)<\/span>/gi;
       var diceMatch, dices = [];
       while ((diceMatch = diceRegex.exec(rowHtml)) !== null) {
@@ -319,7 +380,7 @@ function parseCsvToRecords(csvContent) {
     idxRes = header.indexOf("result");
   }
 
-  var recentLines = lines.slice(-60);
+  var recentLines = lines.slice(-100);
   for (var i = 0; i < recentLines.length; i++) {
     var cols = recentLines[i];
     if (cols.length >= 8 && cols[idxId] !== "draw_id" && cols[idxId] !== "Mã kỳ") {
@@ -342,11 +403,11 @@ function parseCsvToRecords(csvContent) {
 }
 
 // -------------------------------------------------------------------------
-// 5. SHEET 'THỐNG KÊ & BIỂU ĐỒ' (ĐA KHUNG THỜI GIAN & BIỂU ĐỒ NHÚNG)
+// 5. CÔNG THỨC GIỜ QUAY CHUẨN 6 PHÚT/KỲ & ÁNH XẠ BỘ SỐ
 // -------------------------------------------------------------------------
 var THEORETICAL_WAYS = [1, 3, 6, 10, 15, 21, 25, 27, 27, 25, 21, 15, 10, 6, 3, 1];
 
-// Bảng ánh xạ bộ 3 viên xúc xắc tối ưu (có số hoán vị cao nhất) cho từng Tổng
+// Bảng ánh xạ bộ 3 viên xúc xắc tối ưu (số lượng hoán vị cao nhất) cho từng Tổng
 var BEST_DICE_COMBO = {
   3: [1, 1, 1],
   4: [1, 1, 2],
@@ -366,23 +427,19 @@ var BEST_DICE_COMBO = {
   18: [6, 6, 6]
 };
 
+/**
+ * Chuẩn hóa giờ mở thưởng Vietlott Bingo 18:
+ * - 159 kỳ/ngày, từ 06:00 đến 21:54
+ * - Tần suất chính xác: 6 phút/kỳ (Slot 1: 06:06, Slot 2: 06:12, ... Slot 159: 21:54)
+ */
 function formatSlotTime(slot) {
   var s = Number(slot);
   if (isNaN(s) || s < 1) s = 1;
-  if (s > 96) s = 96;
-  var totalMins = 6 * 60 + 5 + (s - 1) * 10;
+  if (s > 159) s = 159;
+  var totalMins = 6 * 60 + s * 6;
   var h = Math.floor(totalMins / 60);
   var m = totalMins % 60;
   return (h < 10 ? "0" + h : "" + h) + ":" + (m < 10 ? "0" + m : "" + m);
-}
-
-function getDrawTime(timeVal, slotVal, fallbackIndex) {
-  var tStr = String(timeVal || "").trim();
-  if (tStr && tStr.length >= 4 && tStr.indexOf(":") !== -1) return tStr;
-  var s = Number(slotVal || 0);
-  if (s <= 0 && fallbackIndex) s = fallbackIndex;
-  if (s > 0) return formatSlotTime(s);
-  return "--:--";
 }
 
 function extractDateStr(val) {
@@ -402,6 +459,9 @@ function extractDateStr(val) {
   return s.substring(0, 10);
 }
 
+// -------------------------------------------------------------------------
+// 6. SHEET 'THỐNG KÊ & BIỂU ĐỒ' (ĐA KHUNG THỜI GIAN & BIỂU ĐỒ NHÚNG)
+// -------------------------------------------------------------------------
 function setupStatsAndChartsSheet() {
   updateStatsAndChartsSheet();
 }
@@ -499,7 +559,7 @@ function updateStatsAndChartsSheet() {
 }
 
 // -------------------------------------------------------------------------
-// 6. SHEET 'DỰ ĐOÁN HÀNG NGÀY' (MÔ HÌNH HỢP NHẤT M16 & BẢNG DỰ ĐOÁN THEO TỪNG KỲ)
+// 7. SHEET 'DỰ ĐOÁN HÀNG NGÀY' (MÔ HÌNH HỢP NHẤT M16 & DỰ ĐOÁN 3 KỲ TIẾP THEO)
 // -------------------------------------------------------------------------
 function setupPredictionSheet() {
   updatePredictionSheet();
@@ -526,12 +586,10 @@ function updatePredictionSheet() {
   var lastDrawId = String(lastRowData[0]).replace("#", "").trim().padStart(7, "0");
   var lastResult = String(lastRowData[8]);
 
-  // Phân phối lý thuyết H0 và tần suất Hot-N
   var pH0 = {}, counts = {}, pMarkov = {};
   for (var s = 3; s <= 18; s++) { pH0[s] = THEORETICAL_WAYS[s - 3] / 216.0; counts[s] = 0; }
   for (var h = 0; h < historySums.length; h++) counts[historySums[h]]++;
 
-  // Ma trận chuyển trạng thái Markov bậc 1
   var transMatrix = {};
   for (var f = 3; f <= 18; f++) {
     transMatrix[f] = {};
@@ -586,7 +644,6 @@ function updatePredictionSheet() {
   sheet.getRange("A2:N2").merge().setValue("Kỳ tham chiếu gần nhất: #" + lastDrawId + " | Kết quả: " + lastResult + " (Tổng " + lastSum + ") | Cập nhật: " + Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"))
     .setFontStyle("italic").setHorizontalAlignment("center");
 
-  // BẢNG 1: XÁC SUẤT HỢP NHẤT 16 TỔNG
   sheet.getRange(4, 1, 1, 9).setValues([["Hạng", "Tổng", "Dự phóng Hợp nhất (%)", "Lý thuyết H0 (%)", "Mô hình Markov (%)", "Mô hình Hot-500 (%)", "Mô hình Bayes (%)", "Độ lệch / H0 (%)", "Khuyến nghị xu hướng"]])
     .setFontWeight("bold").setBackground("#2563EB").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
@@ -597,7 +654,6 @@ function updatePredictionSheet() {
   }
   sheet.getRange(5, 1, 16, 9).setValues(mainRows).setHorizontalAlignment("center");
 
-  // THÔNG TIN BÊN PHẢI: TOP 3 & CỬA CƯỢC
   sheet.getRange("K4:N4").merge().setValue("🎯 TOP 3 TỔNG XÁC SUẤT CAO NHẤT KỲ TIẾP THEO")
     .setFontWeight("bold").setBackground("#D97706").setFontColor("#FFFFFF").setHorizontalAlignment("center");
   sheet.getRange(5, 11, 3, 4).setValues([
@@ -623,7 +679,7 @@ function updatePredictionSheet() {
   ]).setFontSize(9).setFontColor("#475569");
 
   // -----------------------------------------------------------------------
-  // BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (XÚC XẮC 1-2-3, TỔNG, ĐỐI CHIẾU, TỈ LỆ)
+  // BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (DỰ ĐOÁN 3 KỲ TIẾP THEO)
   // -----------------------------------------------------------------------
   var refDateStr = extractDateStr(lastRowData[1]);
   var todayDraws = [];
@@ -649,61 +705,94 @@ function updatePredictionSheet() {
     }
   }
 
+  // Sắp xếp các kỳ trong ngày tăng dần theo mã kỳ để tính slot chính xác
+  todayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
   var totalTodayDraws = todayDraws.length;
+  var firstDrawIdToday = todayDraws.length > 0 ? Number(todayDraws[0].draw_id) : Number(lastDrawId);
 
-  // Hàm dự đoán tổng tối ưu dựa trên tổng kỳ trước đó qua ma trận Markov smoothed
-  function getBestPredictedSumForState(priorSum) {
-    if (priorSum >= 3 && priorSum <= 18) {
+  // Thuật toán dự đoán chuỗi đa bước cho các kỳ tiếp theo
+  function predictMultiStep(priorSum, steps) {
+    var preds = [];
+    var curS = priorSum;
+    for (var st = 1; st <= steps; st++) {
       var bestCand = 10, maxScore = -1;
-      for (var cand = 3; cand <= 18; cand++) {
-        var score = transMatrix[priorSum][cand] + 5.0 * (THEORETICAL_WAYS[cand - 3] / 216.0);
-        if (score > maxScore) {
-          maxScore = score;
-          bestCand = cand;
+      if (curS >= 3 && curS <= 18) {
+        for (var cand = 3; cand <= 18; cand++) {
+          var markovScore = transMatrix[curS][cand] + 5.0 * (THEORETICAL_WAYS[cand - 3] / 216.0);
+          var ensScore = 0;
+          for (var e = 0; e < ensembleList.length; e++) {
+            if (ensembleList[e].sum === cand) {
+              ensScore = ensembleList[e].pEnsemble;
+              break;
+            }
+          }
+          var totalScore = markovScore * 0.6 + ensScore * 0.4;
+          if (totalScore > maxScore) {
+            maxScore = totalScore;
+            bestCand = cand;
+          }
         }
+      } else {
+        bestCand = ensembleList[(st - 1) % ensembleList.length].sum;
       }
-      return bestCand;
+      preds.push(bestCand);
+      curS = bestCand;
     }
-    return ensembleList[0].sum;
+    return preds;
   }
 
-  // Tiêu đề bảng dự đoán theo từng kỳ
   sheet.getRange("A22:I22").merge().setValue("🔮 BẢNG DỰ ĐOÁN BỘ SỐ THEO TỪNG KỲ QUAY HÔM NAY (" + refDateStr + ")")
     .setFontWeight("bold").setFontSize(13).setBackground("#1E293B").setFontColor("#FFFFFF").setHorizontalAlignment("center");
-  sheet.getRange("A23:I23").merge().setValue("Kỳ kế tiếp được gắn nhãn [KỲ TIẾP THEO] ở đầu bảng | Đối chiếu kết quả thực tế & tỉ lệ tổng xuất hiện trong ngày")
+  sheet.getRange("A23:I23").merge().setValue("Hiển thị nổi bật 3 KỲ TIẾP THEO SẮP QUAY (+1, +2, +3) | Chu kỳ chuẩn 6 phút/kỳ (159 kỳ/ngày) khớp 100% thời gian thực")
     .setFontStyle("italic").setHorizontalAlignment("center");
 
   var tableHeaders = [["Mã kỳ", "Giờ quay", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng dự đoán", "Bộ số thực tế (từ Chi tiết)", "Kết quả đối chiếu", "Tỉ lệ Tổng trong ngày (%)"]];
   sheet.getRange(24, 1, 1, 9).setValues(tableHeaders)
     .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  // DÒNG NỔI BẬT: KỲ TIẾP THEO (UPCOMING DRAW)
-  var nextDrawNum = Number(lastDrawId.replace("#", "")) + 1;
-  var nextDrawId = String(nextDrawNum).padStart(7, "0");
-  var lastSlot = Number(lastRowData[3]) || (todayDraws.length > 0 ? todayDraws[todayDraws.length - 1].slot : 0);
-  if (lastSlot <= 0) lastSlot = todayDraws.length;
-  var nextSlot = lastSlot < 96 ? lastSlot + 1 : 1;
-  var nextTimeStr = formatSlotTime(nextSlot);
+  // DỰ ĐOÁN 3 KỲ TIẾP THEO (+1, +2, +3)
+  var lastDrawNum = Number(lastDrawId);
+  var lastSlot = (lastDrawNum - firstDrawIdToday) + 1;
+  if (lastSlot < 1) lastSlot = totalTodayDraws > 0 ? totalTodayDraws : 1;
 
-  var topPredictedSum = ensembleList[0].sum;
-  var topCombo = BEST_DICE_COMBO[topPredictedSum] || [3, 4, 4];
-  var todayRateForPredicted = totalTodayDraws > 0 ?
-    ((dailyCounts[topPredictedSum] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[topPredictedSum] + "/" + totalTodayDraws + " lần)" : "0%";
-
-  var upcomingRow = [
-    "#" + nextDrawId + " [KỲ TIẾP THEO]",
-    nextTimeStr,
-    topCombo[0],
-    topCombo[1],
-    topCombo[2],
-    topPredictedSum,
-    "⏳ Đang chờ mở thưởng...",
-    "⏳ Chờ kết quả",
-    todayRateForPredicted
+  var upcomingPreds = predictMultiStep(lastSum, 3);
+  var upcomingRows = [];
+  var upcomingColors = [
+    { bg: "#FEF3C7", text: "#92400E", label: "+1" }, // Kỳ 1: Vàng hổ phách
+    { bg: "#E0E7FF", text: "#3730A3", label: "+2" }, // Kỳ 2: Lam nhạt
+    { bg: "#EDE9FE", text: "#5B21B6", label: "+3" }  // Kỳ 3: Tím nhạt
   ];
 
-  sheet.getRange(25, 1, 1, 9).setValues([upcomingRow])
-    .setFontWeight("bold").setBackground("#FEF3C7").setFontColor("#92400E").setHorizontalAlignment("center");
+  for (var upIdx = 0; upIdx < 3; upIdx++) {
+    var upNum = lastDrawNum + upIdx + 1;
+    var upIdStr = String(upNum).padStart(7, "0");
+    var upSlot = lastSlot < 159 ? (lastSlot + upIdx + 1) : ((lastSlot + upIdx) % 159 + 1);
+    var upTimeStr = formatSlotTime(upSlot);
+    var upPredSum = upcomingPreds[upIdx];
+    var upCombo = BEST_DICE_COMBO[upPredSum] || [3, 4, 4];
+    var upDayRate = totalTodayDraws > 0 ?
+      ((dailyCounts[upPredSum] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[upPredSum] + "/" + totalTodayDraws + " lần)" : "0%";
+
+    upcomingRows.push([
+      "#" + upIdStr + " [KỲ TIẾP THEO " + upcomingColors[upIdx].label + "]",
+      upTimeStr,
+      upCombo[0],
+      upCombo[1],
+      upCombo[2],
+      upPredSum,
+      "⏳ Đang chờ mở thưởng...",
+      "⏳ Chờ quay số",
+      upDayRate
+    ]);
+  }
+
+  // Ghi và định dạng 3 dòng dự đoán tiếp theo vào dòng 25, 26, 27
+  sheet.getRange(25, 1, 1, 9).setValues([upcomingRows[0]])
+    .setFontWeight("bold").setBackground(upcomingColors[0].bg).setFontColor(upcomingColors[0].text).setHorizontalAlignment("center");
+  sheet.getRange(26, 1, 1, 9).setValues([upcomingRows[1]])
+    .setFontWeight("bold").setBackground(upcomingColors[1].bg).setFontColor(upcomingColors[1].text).setHorizontalAlignment("center");
+  sheet.getRange(27, 1, 1, 9).setValues([upcomingRows[2]])
+    .setFontWeight("bold").setBackground(upcomingColors[2].bg).setFontColor(upcomingColors[2].text).setHorizontalAlignment("center");
 
   // CÁC KỲ ĐÃ QUAY TRONG NGÀY (SẮP XẾP TỪ KỲ MỚI NHẤT ĐẾN KỲ CŨ NHẤT)
   var drawRows = [];
@@ -711,8 +800,12 @@ function updatePredictionSheet() {
 
   for (var k = todayDraws.length - 1; k >= 0; k--) {
     var cur = todayDraws[k];
+    var curSlot = (Number(cur.draw_id) - firstDrawIdToday) + 1;
+    if (cur.slot > 0) curSlot = cur.slot;
+    var drawTimeStr = formatSlotTime(curSlot);
+
     var prevTotal = (k > 0) ? todayDraws[k - 1].total : 10;
-    var predSumK = getBestPredictedSumForState(prevTotal);
+    var predSumK = predictMultiStep(prevTotal, 1)[0];
     var comboK = BEST_DICE_COMBO[predSumK] || [2, 3, 5];
 
     var actualDiceStr = cur.d1 + " - " + cur.d2 + " - " + cur.d3 + " (Tổng " + cur.total + ")";
@@ -727,8 +820,6 @@ function updatePredictionSheet() {
 
     var dayRateStr = totalTodayDraws > 0 ?
       ((dailyCounts[cur.total] / totalTodayDraws) * 100).toFixed(1) + "% (" + dailyCounts[cur.total] + "/" + totalTodayDraws + " lần)" : "0%";
-
-    var drawTimeStr = getDrawTime(cur.time, cur.slot, k + 1);
 
     drawRows.push([
       "#" + cur.draw_id,
@@ -746,13 +837,12 @@ function updatePredictionSheet() {
   }
 
   if (drawRows.length > 0) {
-    var range = sheet.getRange(26, 1, drawRows.length, 9);
+    var range = sheet.getRange(28, 1, drawRows.length, 9);
     range.setValues(drawRows).setHorizontalAlignment("center");
-    sheet.getRange(26, 1, drawRows.length, 1).setNumberFormat("@");
+    sheet.getRange(28, 1, drawRows.length, 1).setNumberFormat("@");
 
-    // Tô màu nổi bật cột Đối chiếu (Cột H)
     for (var mIdx = 0; mIdx < matchColors.length; mIdx++) {
-      var cell = sheet.getRange(26 + mIdx, 8);
+      var cell = sheet.getRange(28 + mIdx, 8);
       cell.setFontColor(matchColors[mIdx]);
       if (matchColors[mIdx] === "#15803D") {
         cell.setFontWeight("bold").setBackground("#DCFCE7");
@@ -760,20 +850,19 @@ function updatePredictionSheet() {
     }
   }
 
-  // Căn chỉnh độ rộng các cột
-  sheet.setColumnWidth(1, 140); // Mã kỳ
-  sheet.setColumnWidth(2, 90);  // Giờ quay
-  sheet.setColumnWidth(3, 80);  // Xúc xắc 1
-  sheet.setColumnWidth(4, 80);  // Xúc xắc 2
-  sheet.setColumnWidth(5, 80);  // Xúc xắc 3
-  sheet.setColumnWidth(6, 110); // Tổng dự đoán
-  sheet.setColumnWidth(7, 180); // Bộ số thực tế
-  sheet.setColumnWidth(8, 140); // Kết quả đối chiếu
-  sheet.setColumnWidth(9, 160); // Tỉ lệ trong ngày
+  sheet.setColumnWidth(1, 150);
+  sheet.setColumnWidth(2, 90);
+  sheet.setColumnWidth(3, 80);
+  sheet.setColumnWidth(4, 80);
+  sheet.setColumnWidth(5, 80);
+  sheet.setColumnWidth(6, 110);
+  sheet.setColumnWidth(7, 180);
+  sheet.setColumnWidth(8, 140);
+  sheet.setColumnWidth(9, 160);
 }
 
 // -------------------------------------------------------------------------
-// 7. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ GITHUB ACTIONS HOẶC ROBOT)
+// 8. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ GITHUB ACTIONS HOẶC ROBOT)
 // -------------------------------------------------------------------------
 function doPost(e) {
   try {

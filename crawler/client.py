@@ -25,7 +25,7 @@ class VietlottClient:
         timeout: float = 20.0,
         max_retries: int = 3,
         backoff_factor: float = 1.5,
-        max_req_per_hour: int = 20,
+        max_req_per_hour: int = 150,
         user_agent: str = "Bingo18Analytics/1.0 (+https://github.com/vietlot; contact@bingo18analytics.local)",
     ):
         self.url = url

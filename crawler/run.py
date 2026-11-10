@@ -31,29 +31,68 @@ def run_crawler() -> int:
     client = VietlottClient()
 
     fetched_at = datetime.now().isoformat()
-    logger.info("Bắt đầu truy vấn kết quả mới nhất từ cổng Vietlott...")
-    raw_response = client.fetch_page(page_index=1, page_size=20)
-    if not raw_response:
-        logger.error("Không nhận được dữ liệu từ Vietlott.")
-        return 0
+    logger.info("Bắt đầu truy vấn kết quả mới nhất từ cổng Vietlott qua đa trang...")
+    
+    all_valid_records = []
+    all_error_records = []
+    first_raw_response = None
+    existing_all_ids = set()
+    
+    # Đọc nhanh các ID gần nhất từ all.csv để dừng lặp sớm
+    all_csv_path = data_dir / "all.csv"
+    if all_csv_path.exists():
+        try:
+            with open(all_csv_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                for line in lines[-200:]:
+                    parts = line.strip().split(",")
+                    if parts and parts[0] != "draw_id":
+                        existing_all_ids.add(parts[0].replace("#", "").strip().zfill(7))
+        except Exception as e:
+            logger.warning(f"Không thể đọc nhanh ID cũ: {e}")
 
-    html_content = parse_ajaxpro_html_content(raw_response)
-    if not html_content:
-        logger.error("Không thể giải mã HtmlContent từ phản hồi.")
-        return 0
+    for page in range(1, 16):
+        raw_response = client.fetch_page(page_index=page, page_size=10)
+        if not raw_response:
+            break
+        if first_raw_response is None:
+            first_raw_response = raw_response
 
-    valid_records, error_records = parse_draw_rows(
-        html_content, snapshot_id="live_crawl", fetched_at=fetched_at
-    )
-    logger.info(f"Phân tích thành công: {len(valid_records)} kỳ hợp lệ, {len(error_records)} lỗi.")
+        html_content = parse_ajaxpro_html_content(raw_response)
+        if not html_content:
+            break
+
+        valid_records, error_records = parse_draw_rows(
+            html_content, snapshot_id=f"live_p{page}", fetched_at=fetched_at
+        )
+        if not valid_records:
+            break
+
+        all_error_records.extend(error_records)
+        stop_paging = False
+        new_in_page = 0
+        for r in valid_records:
+            r_id = r["draw_id"].replace("#", "").strip().zfill(7)
+            if r_id in existing_all_ids:
+                stop_paging = True
+            else:
+                existing_all_ids.add(r_id)
+                all_valid_records.append(r)
+                new_in_page += 1
+
+        if stop_paging or new_in_page == 0:
+            logger.info(f"Đã chạm đến kỳ quay đã có sẵn tại trang {page}. Dừng quét.")
+            break
+
+    logger.info(f"Phân tích thành công: {len(all_valid_records)} kỳ hợp lệ mới, {len(all_error_records)} lỗi.")
 
     # Lưu snapshot thô
-    if valid_records:
-        latest_id = valid_records[0]["draw_id"]
-        latest_date = valid_records[0]["date"]
-        storage.save_raw_snapshot(raw_response, latest_date, latest_id, fetched_at)
+    if all_valid_records and first_raw_response:
+        latest_id = all_valid_records[0]["draw_id"]
+        latest_date = all_valid_records[0]["date"]
+        storage.save_raw_snapshot(first_raw_response, latest_date, latest_id, fetched_at)
 
-    count_new, new_ids = storage.append_new_draws(valid_records, error_records)
+    count_new, new_ids = storage.append_new_draws(all_valid_records, all_error_records)
     if count_new > 0:
         first_id = new_ids[0]
         last_id = new_ids[-1]
