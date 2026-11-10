@@ -109,7 +109,14 @@ function manualRunAll() {
   setupPredictionHistorySheet();
 
   var ui = SpreadsheetApp.getUi();
-  if (syncResult && syncResult.addedCount > 0) {
+  if (syncResult && !syncResult.success) {
+    ui.alert(
+      "⚠️ Cảnh báo Kết nối Đồng bộ:\n\n" +
+      "• Không thể kết nối lấy kỳ mới: " + (syncResult.error || syncResult.reason || "Lỗi mạng") + "\n" +
+      "• Dữ liệu hiện tại trong Sheet dừng ở kỳ: #" + (syncResult.currentMaxId || "hiện tại") + "\n\n" +
+      "💡 Hệ thống đã tự động tính toán lại các bảng phân tích dựa trên dữ liệu sẵn có."
+    );
+  } else if (syncResult && syncResult.addedCount > 0) {
     ui.alert(
       "🎉 Đồng bộ dữ liệu thành công!\n\n" +
       "• Đã nạp thêm: " + syncResult.addedCount + " kỳ quay mới vào sheet 'Chi tiết'.\n" +
@@ -428,6 +435,7 @@ function fetchLatestDrawsFromSources(existingIds, maxCurrentId) {
       var options = {
         method: "post",
         headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
           "X-AjaxPro-Method": "ServerSideDrawResult",
           "Content-Type": "text/plain; charset=utf-8",
           "Origin": "https://vietlott.vn",
