@@ -13,8 +13,11 @@ Chạy nền liên tục 24/7 trên IP nội địa (Việt Nam) để:
 """
 
 import csv
+import http.server
+import json
 import logging
 import os
+import socketserver
 import subprocess
 import sys
 import threading
@@ -301,10 +304,46 @@ def autonomous_loop():
             time.sleep(30)
 
 
+def start_health_server():
+    """Khởi chạy máy chủ HTTP tối giản phục vụ Health Check cho Render/Koyeb Web Service."""
+    port_str = os.getenv("PORT")
+    if not port_str:
+        return
+    try:
+        port = int(port_str)
+        class HealthCheckHandler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                latest = get_latest_local_draw()
+                resp = json.dumps({
+                    "status": "healthy",
+                    "service": "bingo18-agent-daemon",
+                    "latest_draw": latest.get("draw_id") if latest else None
+                })
+                self.wfile.write(resp.encode("utf-8"))
+
+            def log_message(self, format, *args):
+                pass  # Tắt log HTTP của health check để không làm rác log
+
+        socketserver.TCPServer.allow_reuse_address = True
+        with socketserver.TCPServer(("0.0.0.0", port), HealthCheckHandler) as httpd:
+            logger.info(f"Health Check Web Server đang lắng nghe trên cổng {port} cho Render...")
+            httpd.serve_forever()
+    except Exception as e:
+        logger.warning(f"Lỗi khởi động Health Check Web Server: {e}")
+
+
 def main():
     logger.info("==================================================")
     logger.info("   BINGO18 PRO AUTONOMOUS AGENT DAEMON 24/7      ")
     logger.info("==================================================")
+
+    # 0. Khởi chạy Health Check Web Server nếu Render cấp biến PORT
+    if os.getenv("PORT"):
+        web_thread = threading.Thread(target=start_health_server, daemon=True)
+        web_thread.start()
 
     # 1. Khởi chạy Telegram Listener nếu có token & chat_id
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
