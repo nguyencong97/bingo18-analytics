@@ -165,6 +165,7 @@ class TelegramBotListener:
                 "🤖 <b>BINGO18 PRO AGENT DAEMON</b>\n\n"
                 "Danh sách các lệnh hỗ trợ:\n"
                 "• <b>/sync</b> hoặc <b>/dongbo</b> : Quét kết quả mới nhất từ Vietlott và PUSH ngay lên Google Sheet\n"
+                "• <b>/streak</b> hoặc <b>/cauthong</b> : Kiểm tra nhịp gan (chuỗi chưa về) của cửa Lớn, Nhỏ, Hòa\n"
                 "• <b>/status</b> : Kiểm tra trạng thái kỳ mới nhất, số kỳ hôm nay và kết nối\n"
                 "• <b>/predict</b> : Xem nhanh dự đoán kỳ kế tiếp\n"
                 "• <b>/help</b> : Xem lại danh sách này"
@@ -262,6 +263,51 @@ class TelegramBotListener:
             else:
                 p_text = "⚠️ Chưa có dữ liệu để tính toán kỳ tiếp theo."
             self.send_message(p_text, message_id)
+
+        elif cmd in ("/streak", "/cauthong", "/nhipgan"):
+            from crawler.streak_monitor import analyze_current_streaks, STAKING_PLAN, load_streak_state
+            data_dir = ROOT_DIR / "data"
+            analysis = analyze_current_streaks(data_dir)
+            latest = analysis.get("latest_draw")
+            streaks = analysis.get("streaks")
+            if latest and streaks:
+                curr_id = latest["draw_id"]
+                tot = latest["total"]
+                date_str, time_str, slot, _ = compute_draw_metadata(int(curr_id))
+
+                def format_status(gap: int) -> str:
+                    if gap >= 11:
+                        step = gap - 10
+                        if step <= len(STAKING_PLAN):
+                            bet = STAKING_PLAN[step - 1]["bet"]
+                            return f"🚨 <b>VÀO LỆNH (Bước {step}/7 - Cược {bet:,}đ)</b>"
+                        return f"🛑 <b>Stop-loss ({gap} kỳ)</b>"
+                    elif gap == 10:
+                        return "⚠️ <b>Cảnh báo sớm (Chuẩn bị vốn)</b>"
+                    elif gap >= 7:
+                        return f"👀 Đang theo dõi ({gap} kỳ)"
+                    return f"✅ Bình thường ({gap} kỳ)"
+
+                stat_lon = format_status(streaks["LON"]["gap"])
+                stat_nho = format_status(streaks["NHO"]["gap"])
+                stat_hoa = f"{streaks['HOA']['gap']} kỳ liên tiếp"
+
+                streak_text = (
+                    "📊 <b>BẢNG THEO DÕI NHỊP GAN (STREAK MONITOR)</b>\n\n"
+                    f"🎯 Kỳ mới nhất: <b>#{curr_id}</b> (Slot {slot}/159 lúc <b>{time_str}</b>)\n"
+                    f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{tot}</b>)\n\n"
+                    f"🔵 <b>Cửa LỚN (Tổng 12..18):</b>\n"
+                    f"• Chưa về: <b>{streaks['LON']['gap']} kỳ liên tiếp</b>\n"
+                    f"• Trạng thái: {stat_lon}\n\n"
+                    f"🔴 <b>Cửa NHỎ (Tổng 3..9):</b>\n"
+                    f"• Chưa về: <b>{streaks['NHO']['gap']} kỳ liên tiếp</b>\n"
+                    f"• Trạng thái: {stat_nho}\n\n"
+                    f"⚪ <b>Cửa HÒA (Tổng 10..11):</b> Chưa về {stat_hoa}\n\n"
+                    f"💡 <i>Quy tắc: Khi cửa đạt 10 kỳ chưa về bot sẽ cảnh báo sớm; đạt ≥ 11 kỳ bot sẽ tự động bắn tín hiệu và mức tiền vào lệnh!</i>"
+                )
+            else:
+                streak_text = "⚠️ Chưa có dữ liệu để phân tích nhịp gan."
+            self.send_message(streak_text, message_id)
 
     def run_polling(self):
         logger.info("Telegram Bot Listener đã sẵn sàng lắng nghe lệnh từ người dùng...")

@@ -271,6 +271,15 @@ def run_crawler(force_sync: bool = False) -> int:
     else:
         LAST_GAS_STATUS["status"] = "no-gas-url"
 
+    # -------------------------------------------------------------
+    # KIỂM TRA NHỊP GAN & BẮN CẢNH BÁO / TÍN HIỆU VÀO LỆNH
+    # -------------------------------------------------------------
+    try:
+        from crawler.streak_monitor import check_and_dispatch_streak_alerts
+        check_and_dispatch_streak_alerts(data_dir)
+    except Exception as e:
+        logger.warning(f"Lỗi khi kiểm tra nhịp gan: {e}")
+
     return count_new
 
 
