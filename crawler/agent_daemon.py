@@ -131,6 +131,85 @@ def push_to_gas_webhook(records: List[Dict]) -> bool:
     return False
 
 
+# =========================================================================
+# DANH MỤC LỆNH & MENU TƯƠNG TÁC TỰ ĐỘNG (DYNAMIC COMMAND REGISTRY)
+# =========================================================================
+BOT_COMMANDS = [
+    {
+        "command": "streak",
+        "description": "📊 Nhịp gan cửa Lớn / Nhỏ / Hòa",
+        "button": "📊 /streak",
+        "aliases": ["/streak", "streak", "/cauthong", "/nhipgan", "📊 /streak", "nhịp gan", "cầu thông"]
+    },
+    {
+        "command": "sync",
+        "description": "🔄 Quét kết quả & đẩy Google Sheet",
+        "button": "🔄 /sync",
+        "aliases": ["/sync", "sync", "/dongbo", "🔄 /sync", "đồng bộ", "cập nhật"]
+    },
+    {
+        "command": "status",
+        "description": "📈 Trạng thái kỳ mới & tiến độ ngày",
+        "button": "📈 /status",
+        "aliases": ["/status", "status", "/trangthai", "📈 /status", "trạng thái"]
+    },
+    {
+        "command": "predict",
+        "description": "🔮 Phân tích & gợi ý kỳ kế tiếp",
+        "button": "🔮 /predict",
+        "aliases": ["/predict", "predict", "/dudoan", "🔮 /predict", "dự đoán"]
+    },
+    {
+        "command": "help",
+        "description": "ℹ️ Hướng dẫn & danh sách nút bấm",
+        "button": "ℹ️ /help",
+        "aliases": ["/help", "help", "/start", "start", "ℹ️ /help", "trợ giúp", "hướng dẫn"]
+    }
+]
+
+
+def register_telegram_commands(token: str) -> bool:
+    """Đăng ký danh sách lệnh vào Menu hệ thống của Telegram Bot."""
+    if not token:
+        return False
+    try:
+        base_url = f"https://api.telegram.org/bot{token}"
+        commands_payload = [
+            {"command": c["command"], "description": c["description"]}
+            for c in BOT_COMMANDS
+        ]
+        res1 = httpx.post(f"{base_url}/setMyCommands", json={"commands": commands_payload}, timeout=10)
+        menu_payload = {"menu_button": {"type": "commands"}}
+        res2 = httpx.post(f"{base_url}/setChatMenuButton", json=menu_payload, timeout=10)
+        ok = (res1.status_code == 200 and res2.status_code == 200)
+        if ok:
+            logger.info("Đã đăng ký thành công Menu lệnh với máy chủ Telegram!")
+        return ok
+    except Exception as e:
+        logger.warning(f"Không thể kết nối Telegram để đăng ký commands: {e}")
+        return False
+
+
+def build_reply_keyboard() -> Dict:
+    """Tạo bàn phím nút bấm cố định dưới màn hình chat."""
+    buttons = [c["button"] for c in BOT_COMMANDS]
+    keyboard = []
+    row = []
+    for b in buttons:
+        row.append({"text": b})
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+    if row:
+        keyboard.append(row)
+
+    return {
+        "keyboard": keyboard,
+        "resize_keyboard": True,
+        "is_persistent": True
+    }
+
+
 class TelegramBotListener:
     """Lớp lắng nghe lệnh điều khiển từ xa từ người dùng qua Telegram Bot."""
 
@@ -140,14 +219,17 @@ class TelegramBotListener:
         self.base_url = f"https://api.telegram.org/bot{self.token}"
         self.last_update_id = 0
         self.is_running = True
+        register_telegram_commands(self.token)
 
-    def send_message(self, text: str, reply_to_id: Optional[int] = None) -> bool:
+    def send_message(self, text: str, reply_to_id: Optional[int] = None, with_keyboard: bool = True) -> bool:
         try:
             payload = {
                 "chat_id": self.chat_id,
                 "text": text,
                 "parse_mode": "HTML"
             }
+            if with_keyboard:
+                payload["reply_markup"] = build_reply_keyboard()
             if reply_to_id:
                 payload["reply_to_message_id"] = reply_to_id
             res = httpx.post(f"{self.base_url}/sendMessage", json=payload, timeout=10)
@@ -156,23 +238,43 @@ class TelegramBotListener:
             logger.warning(f"Lỗi gửi tin nhắn Telegram: {e}")
             return False
 
-    def handle_command(self, cmd: str, message_id: int):
-        cmd = cmd.strip().lower()
-        logger.info(f"Nhận lệnh từ Telegram: {cmd}")
+    def handle_command(self, raw_input: str, message_id: int):
+        clean_text = raw_input.strip()
+        lower_text = clean_text.lower()
+        logger.info(f"Nhận lệnh từ Telegram: {clean_text}")
 
-        if cmd in ("/start", "/help"):
-            help_text = (
-                "🤖 <b>BINGO18 PRO AGENT DAEMON</b>\n\n"
-                "Danh sách các lệnh hỗ trợ:\n"
-                "• <b>/sync</b> hoặc <b>/dongbo</b> : Quét kết quả mới nhất từ Vietlott và PUSH ngay lên Google Sheet\n"
-                "• <b>/streak</b> hoặc <b>/cauthong</b> : Kiểm tra nhịp gan (chuỗi chưa về) của cửa Lớn, Nhỏ, Hòa\n"
-                "• <b>/status</b> : Kiểm tra trạng thái kỳ mới nhất, số kỳ hôm nay và kết nối\n"
-                "• <b>/predict</b> : Xem nhanh dự đoán kỳ kế tiếp\n"
-                "• <b>/help</b> : Xem lại danh sách này"
-            )
-            self.send_message(help_text, message_id)
+        # Tìm command khớp trong BOT_COMMANDS
+        matched_cmd = None
+        for c in BOT_COMMANDS:
+            if lower_text in [a.lower() for a in c["aliases"]]:
+                matched_cmd = c["command"]
+                break
+            for a in c["aliases"]:
+                if lower_text.startswith(a.lower()):
+                    matched_cmd = c["command"]
+                    break
+            if matched_cmd:
+                break
 
-        elif cmd in ("/sync", "/dongbo"):
+        if not matched_cmd:
+            if clean_text.startswith("/"):
+                self.send_message(
+                    "⚠️ <b>Lệnh không xác định!</b>\n\nVui lòng bấm một trong các nút chức năng bên dưới bàn phím 👇",
+                    message_id
+                )
+            return
+
+        if matched_cmd == "help":
+            help_lines = [
+                "🤖 <b>BINGO18 PRO AGENT DAEMON</b>\n",
+                "Bấm các nút bên dưới bàn phím hoặc mở menu <b>[/]</b> góc trái:"
+            ]
+            for c in BOT_COMMANDS:
+                help_lines.append(f"• <b>/{c['command']}</b> : {c['description']}")
+            help_lines.append("\n💡 <i>Hệ thống tự động theo dõi nhịp gan và cảnh báo kết quả 24/7.</i>")
+            self.send_message("\n".join(help_lines), message_id)
+
+        elif matched_cmd == "sync":
             self.send_message("⏳ Đang quét kết quả từ Vietlott và đồng bộ sang Google Sheet...", message_id)
             try:
                 count_new = run_crawler(force_sync=True)
@@ -223,7 +325,7 @@ class TelegramBotListener:
             except Exception as e:
                 self.send_message(f"❌ <b>Lỗi khi đồng bộ:</b> <code>{e}</code>", message_id)
 
-        elif cmd in ("/status", "/trangthai"):
+        elif matched_cmd == "status":
             latest = get_latest_local_draw()
             today_count = get_today_draws_count()
             gas_status = "Đã cấu hình ✅" if os.getenv("GAS_WEBAPP_URL") else "Chưa cấu hình (đang dùng Git fallback) ⚠️"
@@ -246,7 +348,7 @@ class TelegramBotListener:
                 status_text = "⚠️ Chưa tìm thấy dữ liệu kỳ quay trong data/all.csv"
             self.send_message(status_text, message_id)
 
-        elif cmd in ("/predict", "/dudoan"):
+        elif matched_cmd == "predict":
             latest = get_latest_local_draw()
             if latest:
                 nid = int(latest["draw_id"])
@@ -264,7 +366,7 @@ class TelegramBotListener:
                 p_text = "⚠️ Chưa có dữ liệu để tính toán kỳ tiếp theo."
             self.send_message(p_text, message_id)
 
-        elif cmd in ("/streak", "/cauthong", "/nhipgan"):
+        elif matched_cmd == "streak":
             from crawler.streak_monitor import analyze_current_streaks, STAKING_PLAN, load_streak_state
             data_dir = ROOT_DIR / "data"
             analysis = analyze_current_streaks(data_dir)
@@ -330,9 +432,9 @@ class TelegramBotListener:
                         from_id = str(msg.get("chat", {}).get("id", ""))
                         # Chỉ phản hồi cho tài khoản được cấu hình
                         if from_id == self.chat_id:
-                            text = msg.get("text", "")
+                            text = msg.get("text", "").strip()
                             msg_id = msg.get("message_id")
-                            if text.startswith("/"):
+                            if text:
                                 self.handle_command(text, msg_id)
             except Exception as e:
                 logger.debug(f"Telegram polling tick: {e}")
