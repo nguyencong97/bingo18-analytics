@@ -29,6 +29,16 @@ LAST_GAS_STATUS = {
     "time": None
 }
 
+LAST_CRAWL_STATUS = {
+    "client_url": None,
+    "last_page1_status": None,
+    "last_page1_len": 0,
+    "all_valid_count": 0,
+    "count_new": 0,
+    "latest_seen": None,
+    "error": None
+}
+
 
 def run_crawler() -> int:
     """Thực thi một chu kỳ cào kết quả Bingo18.
@@ -40,6 +50,7 @@ def run_crawler() -> int:
     data_dir = Path(__file__).resolve().parent.parent / "data"
     storage = DataStorage(data_dir=data_dir)
     client = VietlottClient()
+    LAST_CRAWL_STATUS["client_url"] = client.url
 
     fetched_at = datetime.now().isoformat()
     logger.info("Bắt đầu truy vấn kết quả mới nhất từ cổng Vietlott qua đa trang...")
@@ -64,6 +75,10 @@ def run_crawler() -> int:
 
     for page in range(1, 16):
         raw_response = client.fetch_page(page_index=page, page_size=10)
+        if page == 1:
+            LAST_CRAWL_STATUS["last_page1_len"] = len(raw_response) if raw_response else 0
+            LAST_CRAWL_STATUS["last_page1_status"] = "ok" if raw_response else "empty_or_error"
+
         if not raw_response:
             break
         if first_raw_response is None:
@@ -76,6 +91,8 @@ def run_crawler() -> int:
         valid_records, error_records = parse_draw_rows(
             html_content, snapshot_id=f"live_p{page}", fetched_at=fetched_at
         )
+        if page == 1 and valid_records:
+            LAST_CRAWL_STATUS["latest_seen"] = valid_records[0]["draw_id"]
         if not valid_records:
             break
 

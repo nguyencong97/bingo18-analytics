@@ -346,11 +346,12 @@ def start_health_server():
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
                 latest = get_latest_local_draw()
-                from crawler.run import LAST_GAS_STATUS
+                from crawler.run import LAST_GAS_STATUS, LAST_CRAWL_STATUS
                 resp = json.dumps({
                     "status": "healthy",
                     "service": "bingo18-agent-daemon",
                     "latest_draw": latest.get("draw_id") if latest else None,
+                    "crawl_status": LAST_CRAWL_STATUS,
                     "gas_sync": LAST_GAS_STATUS
                 })
                 self.wfile.write(resp.encode("utf-8"))

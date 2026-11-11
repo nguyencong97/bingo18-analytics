@@ -111,16 +111,19 @@ class DataStorage:
         all_records.extend(new_records)
         all_records.sort(key=lambda x: int(x["draw_id"]))
 
-        with open(self.all_csv, "w", newline="", encoding="utf-8") as f:
+        temp_all = self.all_csv.with_suffix(".tmp")
+        with open(temp_all, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_HEADER)
             writer.writeheader()
             for r in all_records:
                 writer.writerow(r)
+        temp_all.replace(self.all_csv)
 
         # 4b. Tự động đồng bộ data/sheet_initial_import.csv chuẩn 9 cột
         sheet_csv = self.data_dir / "sheet_initial_import.csv"
         sheet_headers = ["Mã kỳ", "Ngày quay", "Giờ", "Slot", "Xúc xắc 1", "Xúc xắc 2", "Xúc xắc 3", "Tổng", "Bộ số"]
-        with open(sheet_csv, "w", newline="", encoding="utf-8") as f:
+        temp_sheet = sheet_csv.with_suffix(".tmp")
+        with open(temp_sheet, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(sheet_headers)
             for r in all_records:
@@ -144,6 +147,7 @@ class DataStorage:
                 tot = int(r["total"])
                 res = r.get("result") or f"{d1} {d2} {d3} {tot}"
                 writer.writerow([d_id, d_date, d_time, slot, d1, d2, d3, tot, res])
+        temp_sheet.replace(sheet_csv)
 
         # Cập nhật cache ID
         for r in new_records:
