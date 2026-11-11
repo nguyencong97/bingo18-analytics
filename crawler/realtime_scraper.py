@@ -38,15 +38,21 @@ def compute_draw_metadata(num_id: int):
 
 
 def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
-    """Lấy danh sách 10 kỳ quay mới nhất từ trang thống kê Vietlott.
+    """Lấy danh sách 10 kỳ quay mới nhất từ các nguồn Realtime.
 
-    Thử qua Cloudflare Worker trước nếu có cấu hình, tự động fallback sang Vietlott trực tiếp.
+    Kiến trúc đa nguồn chống chặn 100%:
+    1. Cổng SSR Realtime XSMN (không chặn IP nước ngoài của Render)
+    2. Cloudflare Worker Edge Proxy
+    3. Cổng trực tiếp Vietlott
     """
     global LAST_REALTIME_DEBUG
     LAST_REALTIME_DEBUG = []
-    candidates = []
+    candidates = [
+        # Nguồn 1: Cổng Realtime SSR trực tiếp không chặn IP nước ngoài (xsmn.net)
+        ("https://xsmn.net/xsbingo18-xo-so-bingo18", "xsmn"),
+    ]
     
-    # 1. Thử qua Cloudflare Worker Proxy nếu có
+    # Nguồn 2: Cloudflare Worker Proxy nếu có cấu hình
     raw_cf = (
         proxy_base_url
         or os.getenv("VIETLOTT_PROXY_URL")
@@ -58,10 +64,10 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
         from urllib.parse import urlparse
         parsed = urlparse(clean_cf)
         base_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else clean_cf.rstrip("/")
-        candidates.append(f"{base_origin}/thong-ke")
+        candidates.append((f"{base_origin}/thong-ke", "vietlott_table"))
 
-    # 2. Luôn có endpoint trực tiếp Vietlott làm fallback
-    candidates.append("https://vietlott.vn/vi/choi/bingo/thong-ke-so-trung")
+    # Nguồn 3: Cổng trực tiếp Vietlott (fallback cho kết nối nội địa)
+    candidates.append(("https://vietlott.vn/vi/choi/bingo/thong-ke-so-trung", "vietlott_table"))
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -72,26 +78,27 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
     }
 
     last_err = None
-    for target_url in candidates:
+    for target_url, parser_type in candidates:
         try:
-            logger.info(f"Đang bóc tách Realtime từ: {target_url}")
-            with httpx.Client(timeout=20.0, follow_redirects=True) as client:
+            logger.info(f"Đang bóc tách Realtime từ: {target_url} ({parser_type})")
+            with httpx.Client(timeout=15.0, follow_redirects=True) as client:
                 resp = client.get(target_url, headers=headers)
                 dbg_entry = {
                     "url": target_url,
                     "status": resp.status_code,
                     "len": len(resp.text),
-                    "head": resp.text[:120].replace("\n", " ").strip()
+                    "parser": parser_type
                 }
                 LAST_REALTIME_DEBUG.append(dbg_entry)
                 if resp.status_code == 200 and len(resp.text) > 1000:
-                    records = parse_realtime_html(resp.text)
+                    records = parse_xsmn_html(resp.text) if parser_type == "xsmn" else parse_realtime_html(resp.text)
                     if records:
-                        logger.info(f"⚡ Trích xuất thành công {len(records)} kỳ mới nhất qua Realtime Scraper!")
+                        logger.info(f"⚡ Trích xuất thành công {len(records)} kỳ mới nhất từ {target_url}!")
                         dbg_entry["parsed_count"] = len(records)
+                        dbg_entry["latest_id"] = records[-1]["draw_id"]
                         return records
                     else:
-                        dbg_entry["parse_error"] = "parse_realtime_html found 0 rows"
+                        dbg_entry["parse_error"] = f"{parser_type} returned 0 rows"
         except Exception as e:
             last_err = e
             LAST_REALTIME_DEBUG.append({"url": target_url, "error": str(e)})
@@ -100,6 +107,58 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
     if last_err:
         logger.error(f"Tất cả các nguồn Realtime đều thất bại. Lỗi cuối: {last_err}")
     return []
+
+
+def parse_xsmn_html(html_text: str) -> List[Dict]:
+    """Phân tích HTML trang Bingo 18 từ xsmn.net."""
+    parser = HTMLParser(html_text)
+    ol_list = parser.css("ol.vk-o")
+    if not ol_list:
+        return []
+
+    fetched_at = datetime.now().isoformat()
+    records = []
+
+    for ol in ol_list:
+        label = ol.attributes.get("aria-label", "")
+        m_id = re.search(r"kỳ\s*(\d+)", label, re.I)
+        if not m_id:
+            continue
+        r_id = m_id.group(1).zfill(7)
+        lis = ol.css("li")
+        if len(lis) != 3:
+            continue
+        try:
+            d1 = int(lis[0].text().strip())
+            d2 = int(lis[1].text().strip())
+            d3 = int(lis[2].text().strip())
+        except (ValueError, TypeError):
+            continue
+
+        tot = d1 + d2 + d3
+        num_id = int(r_id)
+        date_str, time_str, slot, draw_datetime = compute_draw_metadata(num_id)
+
+        rec = {
+            "draw_id": r_id,
+            "draw_datetime": draw_datetime,
+            "date": date_str,
+            "time": time_str,
+            "slot_in_day": slot,
+            "d1": str(d1),
+            "d2": str(d2),
+            "d3": str(d3),
+            "total": str(tot),
+            "result": f"{d1} {d2} {d3} {tot}",
+            "source": "xsmn_realtime_ssr",
+            "snapshot_id": f"realtime_{r_id}",
+            "fetched_at": fetched_at,
+            "status": "confirmed"
+        }
+        records.append(rec)
+
+    records.sort(key=lambda x: int(x["draw_id"]))
+    return records
 
 
 def parse_realtime_html(html_text: str) -> List[Dict]:
