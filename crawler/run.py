@@ -93,6 +93,8 @@ def run_crawler(force_sync: bool = False) -> int:
     # -------------------------------------------------------------
     logger.info("⚡ [Tier 1] Đang truy vấn Realtime từ trang Thống Kê Vietlott...")
     realtime_records = fetch_realtime_draws()
+    from crawler.realtime_scraper import LAST_REALTIME_DEBUG
+    LAST_CRAWL_STATUS["tier1_debug"] = LAST_REALTIME_DEBUG
     
     if realtime_records:
         LAST_CRAWL_STATUS["source"] = "realtime_ssr"
@@ -123,7 +125,8 @@ def run_crawler(force_sync: bool = False) -> int:
         logger.info("🔄 [Tier 2] Bắt đầu quét qua cổng AjaxPro đa trang...")
         client = VietlottClient()
         LAST_CRAWL_STATUS["client_url"] = client.url
-        LAST_CRAWL_STATUS["source"] = "ajaxpro_fallback"
+        if not realtime_records:
+            LAST_CRAWL_STATUS["source"] = "ajaxpro_fallback"
 
         for page in range(1, 16):
             raw_response = client.fetch_page(page_index=page, page_size=10)

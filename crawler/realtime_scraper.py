@@ -20,6 +20,8 @@ VN_TZ = timezone(timedelta(hours=7))
 ANCHOR_ID = 195580
 ANCHOR_DATE = date(2026, 11, 11)
 
+LAST_REALTIME_DEBUG: List[Dict] = []
+
 
 def compute_draw_metadata(num_id: int):
     """Tính toán ngày, slot và giờ quay từ mã kỳ theo lịch quay chuẩn Vietlott."""
@@ -40,19 +42,22 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
 
     Thử qua Cloudflare Worker trước nếu có cấu hình, tự động fallback sang Vietlott trực tiếp.
     """
+    global LAST_REALTIME_DEBUG
+    LAST_REALTIME_DEBUG = []
     candidates = []
     
     # 1. Thử qua Cloudflare Worker Proxy nếu có
-    cf_url = (
+    raw_cf = (
         proxy_base_url
         or os.getenv("VIETLOTT_PROXY_URL")
         or os.getenv("CLOUDFLARE_WORKER_URL")
         or os.getenv("PROXY_URL")
     )
-    if cf_url:
+    if raw_cf:
+        clean_cf = raw_cf.strip().strip("'\"")
         from urllib.parse import urlparse
-        parsed = urlparse(cf_url.strip())
-        base_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else cf_url.rstrip("/")
+        parsed = urlparse(clean_cf)
+        base_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else clean_cf.rstrip("/")
         candidates.append(f"{base_origin}/thong-ke")
 
     # 2. Luôn có endpoint trực tiếp Vietlott làm fallback
@@ -70,15 +75,26 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
     for target_url in candidates:
         try:
             logger.info(f"Đang bóc tách Realtime từ: {target_url}")
-            with httpx.Client(timeout=10.0, follow_redirects=True) as client:
+            with httpx.Client(timeout=20.0, follow_redirects=True) as client:
                 resp = client.get(target_url, headers=headers)
+                dbg_entry = {
+                    "url": target_url,
+                    "status": resp.status_code,
+                    "len": len(resp.text),
+                    "head": resp.text[:120].replace("\n", " ").strip()
+                }
+                LAST_REALTIME_DEBUG.append(dbg_entry)
                 if resp.status_code == 200 and len(resp.text) > 1000:
                     records = parse_realtime_html(resp.text)
                     if records:
                         logger.info(f"⚡ Trích xuất thành công {len(records)} kỳ mới nhất qua Realtime Scraper!")
+                        dbg_entry["parsed_count"] = len(records)
                         return records
+                    else:
+                        dbg_entry["parse_error"] = "parse_realtime_html found 0 rows"
         except Exception as e:
             last_err = e
+            LAST_REALTIME_DEBUG.append({"url": target_url, "error": str(e)})
             logger.warning(f"Lỗi khi truy vấn {target_url}: {e}")
 
     if last_err:
