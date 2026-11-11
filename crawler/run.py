@@ -103,8 +103,15 @@ def run_crawler() -> int:
         gas_url = os.environ.get("GAS_WEBAPP_URL")
         if gas_url:
             try:
-                new_records = [r for r in valid_records if r["draw_id"] in new_ids]
-                httpx.post(gas_url, json={"records": new_records}, timeout=15, follow_redirects=True)
+                new_records = [r for r in all_valid_records if r["draw_id"] in new_ids]
+                for r in new_records:
+                    if not r.get("slot_in_day") or r.get("slot_in_day") == 0:
+                        nid = int(r["draw_id"])
+                        slot = ((nid - 195421) % 159 + 1)
+                        r["slot_in_day"] = slot
+                        tot_min = 6 * 60 + slot * 6
+                        r["time"] = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
+                httpx.post(gas_url, json={"records": new_records}, timeout=25, follow_redirects=True)
                 logger.info(f"Đã đồng bộ {len(new_records)} kỳ sang Google Sheet thành công.")
             except Exception as e:
                 logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")

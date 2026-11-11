@@ -128,8 +128,8 @@ class DataStorage:
                 num_id = int(d_id)
                 d_date = r["date"]
                 slot = int(r.get("slot_in_day") or 0)
-                if d_date == "2026-11-10" and num_id >= 195421:
-                    slot = num_id - 195420
+                if not slot or slot < 1:
+                    slot = ((num_id - 195421) % 159 + 1)
                 if slot < 1: slot = 1
                 if slot > 159: slot = 159
 

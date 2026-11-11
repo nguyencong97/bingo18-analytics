@@ -330,10 +330,13 @@ function autoSyncVietlottJob(isManual) {
         continue;
       }
 
-      var slot = (r.date === "2026-11-10" && numId >= 195421) ? (numId - 195420) : (Number(r.slot_in_day) || 1);
+      var slot = Number(r.slot_in_day);
+      if (!slot || slot < 1) {
+        slot = ((numId - 195421) % 159 + 1);
+      }
       if (slot < 1) slot = 1;
       if (slot > 159) slot = 159;
-      var drawTime = formatSlotTime(slot);
+      var drawTime = r.time || formatSlotTime(slot);
 
       toAppend.push([
         rId,
@@ -2257,7 +2260,7 @@ function updatePredictionHistorySheet() {
 }
 
 // -------------------------------------------------------------------------
-// 9. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ GITHUB ACTIONS HOẶC ROBOT)
+// 9. WEBHOOK DOPOST (NHẬN DỮ LIỆU TỰ ĐỘNG TỪ TOOL AGENT HOẶC ROBOT)
 // -------------------------------------------------------------------------
 function doPost(e) {
   try {
@@ -2270,17 +2273,33 @@ function doPost(e) {
     var sheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
     sheet.setName("Chi tiết");
 
+    var lastRow = sheet.getLastRow();
+    var existingIds = {};
+    if (lastRow > 1) {
+      var checkRows = Math.min(500, lastRow - 1);
+      var idValues = sheet.getRange(lastRow - checkRows + 1, 1, checkRows, 1).getValues();
+      for (var k = 0; k < idValues.length; k++) {
+        var rawId = String(idValues[k][0]).trim().replace("#", "").padStart(7, "0");
+        if (rawId) existingIds[rawId] = true;
+      }
+    }
+
     var records = payload.records || (payload.record ? [payload.record] : []);
     var rowsToAppend = [];
     for (var i = 0; i < records.length; i++) {
       var r = records[i];
       if (r && r.draw_id) {
         var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
+        if (existingIds[rId]) continue;
+
         var numId = Number(rId);
-        var slot = (r.date === "2026-11-10" && numId >= 195421) ? (numId - 195420) : (Number(r.slot_in_day) || 1);
+        var slot = Number(r.slot_in_day);
+        if (!slot || slot < 1) {
+          slot = ((numId - 195421) % 159 + 1);
+        }
         if (slot < 1) slot = 1;
         if (slot > 159) slot = 159;
-        var drawTime = formatSlotTime(slot);
+        var drawTime = r.time || formatSlotTime(slot);
 
         rowsToAppend.push([
           rId,
@@ -2293,9 +2312,11 @@ function doPost(e) {
           Number(r.total || (Number(r.d1||0) + Number(r.d2||0) + Number(r.d3||0))),
           r.result || (r.d1 + " " + r.d2 + " " + r.d3 + " " + r.total)
         ]);
+        existingIds[rId] = true;
       }
     }
     if (rowsToAppend.length > 0) {
+      rowsToAppend.sort(function(a, b) { return String(a[0]).localeCompare(String(b[0])); });
       sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, 9).setValues(rowsToAppend);
       updateStatsAndChartsSheet();
       updatePredictionSheet();
