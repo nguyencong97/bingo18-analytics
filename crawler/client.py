@@ -2,11 +2,14 @@
 
 import json
 import logging
+import os
 import random
 import time
 from datetime import datetime
 from typing import Dict, Optional
 import httpx
+
+from crawler.alerts import _ensure_env
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +24,16 @@ class VietlottClient:
 
     def __init__(
         self,
-        url: str = DEFAULT_URL,
+        url: Optional[str] = None,
         timeout: float = 20.0,
         max_retries: int = 3,
         backoff_factor: float = 1.5,
         max_req_per_hour: int = 150,
         user_agent: str = "Bingo18Analytics/1.0 (+https://github.com/vietlot; contact@bingo18analytics.local)",
     ):
-        self.url = url
+        _ensure_env()
+        proxy_url = os.getenv("VIETLOTT_PROXY_URL")
+        self.url = url or (proxy_url.strip() if proxy_url else DEFAULT_URL)
         self.timeout = timeout
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor

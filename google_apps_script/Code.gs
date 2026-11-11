@@ -413,7 +413,8 @@ function fetchLatestDrawsFromSources(existingIds, maxCurrentId) {
 
   // TẦNG 1: Truy vấn trực tiếp từ cổng Vietlott qua đa trang (Auto Pagination)
   try {
-    var url = "https://vietlott.vn/ajaxpro/Vietlott.PlugIn.WebParts.GameBingoCompareWebPart,Vietlott.PlugIn.WebParts.ashx";
+    var proxyUrl = PropertiesService.getScriptProperties().getProperty("VIETLOTT_PROXY_URL");
+    var url = proxyUrl ? proxyUrl.trim() : "https://vietlott.vn/ajaxpro/Vietlott.PlugIn.WebParts.GameBingoCompareWebPart,Vietlott.PlugIn.WebParts.ashx";
     var maxPages = 20;
     var stopPaging = false;
 
@@ -437,10 +438,10 @@ function fetchLatestDrawsFromSources(existingIds, maxCurrentId) {
 
       var options = {
         method: "post",
+        contentType: "text/plain; charset=utf-8",
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
           "X-AjaxPro-Method": "ServerSideDrawResult",
-          "Content-Type": "text/plain; charset=utf-8",
           "Origin": "https://vietlott.vn",
           "Referer": "https://vietlott.vn/vi/trung-thuong/ket-qua-trung-thuong/winning-number-bingo18"
         },

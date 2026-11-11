@@ -1,0 +1,19 @@
+services:
+  - type: worker
+    name: bingo18-agent-daemon
+    env: python
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m crawler.agent_daemon
+    autoDeploy: true
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: GAS_WEBAPP_URL
+        sync: false
+      - key: VIETLOTT_PROXY_URL
+        sync: false
+      - key: HEALTHCHECKS_URL
+        sync: false

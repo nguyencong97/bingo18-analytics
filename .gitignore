@@ -36,6 +36,11 @@ node_modules/
 dist/
 .env.local
 
+# Logs
+*.log
+agent_daemon.log
+scratch/
+
 # IDE
 .vscode/
 .idea/

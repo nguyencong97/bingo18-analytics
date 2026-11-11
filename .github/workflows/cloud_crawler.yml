@@ -37,6 +37,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GAS_WEBAPP_URL: ${{ secrets.GAS_WEBAPP_URL }}
+          VIETLOTT_PROXY_URL: ${{ secrets.VIETLOTT_PROXY_URL }}
         run: |
           python -m crawler.run
           python -m stats.integrity
