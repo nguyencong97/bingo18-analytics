@@ -186,6 +186,8 @@ class TelegramBotListener:
                     gas_msg = ""
                     if LAST_GAS_STATUS["status"] == "ok":
                         gas_msg = f"🌐 Google Sheet: <b>Đã đồng bộ thành công! (+{LAST_GAS_STATUS['count_appended']} dòng mới)</b>"
+                    elif LAST_GAS_STATUS["status"] == "processing-in-background":
+                        gas_msg = "🌐 Google Sheet: <b>Dữ liệu đã nhận! Google Sheet đang tính toán lại 4 sheet ngầm (khoảng 30-60s).</b>"
                     elif LAST_GAS_STATUS["status"] == "no-gas-url":
                         gas_msg = "🌐 Google Sheet: <b>⚠️ Chưa cấu hình biến GAS_WEBAPP_URL trên Render!</b>"
                     elif LAST_GAS_STATUS["status"] == "non-json-200":

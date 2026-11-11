@@ -143,11 +143,12 @@ def run_crawler() -> int:
                         r["slot_in_day"] = slot
                         tot_min = 6 * 60 + slot * 6
                         r["time"] = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
-                res = httpx.post(gas_url, json={"records": recent_to_sync}, timeout=30, follow_redirects=True)
+                LAST_GAS_STATUS["url"] = gas_url[:35] + "..." if len(gas_url) > 35 else gas_url
+                LAST_GAS_STATUS["time"] = datetime.now().isoformat()
+
+                res = httpx.post(gas_url, json={"records": recent_to_sync}, timeout=90.0, follow_redirects=True)
                 LAST_GAS_STATUS["http_code"] = res.status_code
                 LAST_GAS_STATUS["response"] = res.text[:300]
-                LAST_GAS_STATUS["time"] = datetime.now().isoformat()
-                LAST_GAS_STATUS["url"] = gas_url[:35] + "..." if len(gas_url) > 35 else gas_url
                 
                 logger.info(f"Đã gọi GAS Webhook ({res.status_code}): {res.text[:150]}")
                 if res.status_code == 200:
@@ -159,6 +160,10 @@ def run_crawler() -> int:
                         LAST_GAS_STATUS["status"] = "non-json-200"
                 else:
                     LAST_GAS_STATUS["status"] = f"http-error-{res.status_code}"
+        except httpx.ReadTimeout:
+            LAST_GAS_STATUS["status"] = "processing-in-background"
+            LAST_GAS_STATUS["response"] = "Google Sheet đang tính toán lại 4 sheet ngầm (> 60s)"
+            logger.info("Google Sheet đang xử lý dữ liệu và tính toán lại các sheet trong nền...")
         except Exception as e:
             LAST_GAS_STATUS["status"] = "exception"
             LAST_GAS_STATUS["response"] = str(e)
