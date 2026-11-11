@@ -10,7 +10,7 @@ import httpx
 from crawler.client import VietlottClient
 from crawler.parser import parse_ajaxpro_html_content, parse_draw_rows
 from crawler.storage import DataStorage
-from crawler.alerts import send_telegram_alert
+from crawler.alerts import send_telegram_alert, _ensure_env
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +25,7 @@ def run_crawler() -> int:
 
     Trả về số lượng kỳ quay mới được thêm vào.
     """
+    _ensure_env()
     sys.stdout.reconfigure(encoding="utf-8")
     data_dir = Path(__file__).resolve().parent.parent / "data"
     storage = DataStorage(data_dir=data_dir)

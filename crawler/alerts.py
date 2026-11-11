@@ -4,13 +4,31 @@ import logging
 import os
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
+def _ensure_env():
+    """Tự động nạp biến môi trường từ .env nếu chưa có."""
+    if not os.getenv("TELEGRAM_BOT_TOKEN"):
+        env_file = Path(__file__).resolve().parent.parent / ".env"
+        if env_file.exists():
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k not in os.environ or not os.environ[k]:
+                            os.environ[k] = v
+
+
 def send_telegram_alert(message: str) -> bool:
     """Gửi tin nhắn cảnh báo tới Telegram Bot qua biến môi trường."""
+    _ensure_env()
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if not bot_token or not chat_id:
