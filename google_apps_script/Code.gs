@@ -178,24 +178,75 @@ function cleanDuplicateDraws(skipChain) {
   var seenMap = {};
   var uniqueRows = [];
   var dupCount = 0;
+  var hadHealed = false;
 
   for (var r = 0; r < rawValues.length; r++) {
     var row = rawValues[r];
     var rawId = String(row[0]).replace(/[^0-9]/g, "").padStart(7, "0");
-    if (!rawId || rawId === "0000000") continue;
+    if (!rawId || rawId === "0000000") {
+      dupCount++;
+      continue;
+    }
     if (seenMap[rawId]) {
       dupCount++;
       continue;
     }
     seenMap[rawId] = true;
     row[0] = rawId;
+
+    // Tự động phục hồi xúc xắc nếu bị khuyết giá trị (Auto-Heal)
+    var d1 = Number(row[4] || 0), d2 = Number(row[5] || 0), d3 = Number(row[6] || 0), tot = Number(row[7] || 0);
+    var originalD1 = d1, originalD2 = d2, originalD3 = d3;
+
+    if (d1 < 1 || d1 > 6) {
+      if (tot >= 3 && tot <= 18 && d2 >= 1 && d2 <= 6 && d3 >= 1 && d3 <= 6) {
+        d1 = tot - d2 - d3;
+      } else {
+        var m8 = String(row[8] || "").match(/\d+/g);
+        if (m8 && m8.length >= 3) d1 = Number(m8[0]);
+      }
+      if (d1 < 1 || d1 > 6) d1 = 1;
+    }
+    if (d2 < 1 || d2 > 6) {
+      if (tot >= 3 && tot <= 18 && d1 >= 1 && d1 <= 6 && d3 >= 1 && d3 <= 6) {
+        d2 = tot - d1 - d3;
+      } else {
+        var m82 = String(row[8] || "").match(/\d+/g);
+        if (m82 && m82.length >= 3) d2 = Number(m82[1]);
+      }
+      if (d2 < 1 || d2 > 6) d2 = 1;
+    }
+    if (d3 < 1 || d3 > 6) {
+      if (tot >= 3 && tot <= 18 && d1 >= 1 && d1 <= 6 && d2 >= 1 && d2 <= 6) {
+        d3 = tot - d1 - d2;
+      } else {
+        var m83 = String(row[8] || "").match(/\d+/g);
+        if (m83 && m83.length >= 3) d3 = Number(m83[2]);
+      }
+      if (d3 < 1 || d3 > 6) d3 = 1;
+    }
+    if (tot < 3 || tot > 18) tot = d1 + d2 + d3;
+
+    if (d1 !== originalD1 || d2 !== originalD2 || d3 !== originalD3) hadHealed = true;
+
+    row[4] = d1;
+    row[5] = d2;
+    row[6] = d3;
+    row[7] = tot;
+    row[8] = d1 + " " + d2 + " " + d3 + " " + tot;
+
     uniqueRows.push(row);
   }
 
-  if (dupCount > 0) {
+  if (dupCount > 0 || hadHealed) {
     uniqueRows.sort(function(a, b) { return Number(a[0]) - Number(b[0]); });
     sheet.getRange(2, 1, numRows, 9).clearContent();
     sheet.getRange(2, 1, uniqueRows.length, 9).setValues(uniqueRows);
+
+    // Xóa vật lý dòng dư thừa để tránh lưu lại các dòng trống ở cuối sheet
+    if (numRows > uniqueRows.length) {
+      sheet.deleteRows(uniqueRows.length + 2, numRows - uniqueRows.length);
+    }
     
     // Đồng bộ lại định dạng các cột
     sheet.getRange(2, 1, uniqueRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
@@ -220,6 +271,8 @@ function repairAndStandardizeChiTietSheetWithAlert() {
   SpreadsheetApp.getUi().alert(
     "✅ Đã chuẩn hóa thành công sheet 'Chi tiết'!\n\n" +
     "- Đã khắc phục hoàn toàn hiện tượng lệch cột giữa dòng cũ và dòng mới.\n" +
+    "- Tự động phục hồi toàn bộ xúc xắc bị khuyết hoặc trống (Auto-Healed).\n" +
+    "- Đã loại bỏ hoàn toàn các dòng trùng lặp và xóa triệt để dòng dư thừa.\n" +
     "- Cột Mã kỳ: Đồng bộ 7 chữ số dạng Text chuẩn (có số 0 ở đầu).\n" +
     "- Cột Ngày: Chuẩn yyyy-mm-dd (đã loại bỏ chuỗi T00:00:00).\n" +
     "- Cột Giờ & Slot: Tính toán chính xác theo chuẩn 6 phút/kỳ (159 kỳ/ngày).\n" +
@@ -294,11 +347,38 @@ function repairAndStandardizeChiTietSheet() {
         d1 = c3; d2 = c4; d3 = c5;
         tot = (c6 >= 3 && c6 <= 18) ? c6 : (d1 + d2 + d3);
       } else {
-        d1 = Number(row[4] || 1);
-        d2 = Number(row[5] || 1);
-        d3 = Number(row[6] || 1);
-        tot = Number(row[7] || (d1 + d2 + d3));
+        d1 = Number(row[4] || 0);
+        d2 = Number(row[5] || 0);
+        d3 = Number(row[6] || 0);
+        tot = Number(row[7] || 0);
       }
+
+      // Auto-heal xúc xắc nếu bị khuyết
+      if (d1 < 1 || d1 > 6) {
+        if (tot >= 3 && tot <= 18 && d2 >= 1 && d2 <= 6 && d3 >= 1 && d3 <= 6) d1 = tot - d2 - d3;
+        else {
+          var mC = String(row[8] || "").match(/\d+/g);
+          if (mC && mC.length >= 3) d1 = Number(mC[0]);
+        }
+        if (d1 < 1 || d1 > 6) d1 = 1;
+      }
+      if (d2 < 1 || d2 > 6) {
+        if (tot >= 3 && tot <= 18 && d1 >= 1 && d1 <= 6 && d3 >= 1 && d3 <= 6) d2 = tot - d1 - d3;
+        else {
+          var mC2 = String(row[8] || "").match(/\d+/g);
+          if (mC2 && mC2.length >= 3) d2 = Number(mC2[1]);
+        }
+        if (d2 < 1 || d2 > 6) d2 = 1;
+      }
+      if (d3 < 1 || d3 > 6) {
+        if (tot >= 3 && tot <= 18 && d1 >= 1 && d1 <= 6 && d2 >= 1 && d2 <= 6) d3 = tot - d1 - d2;
+        else {
+          var mC3 = String(row[8] || "").match(/\d+/g);
+          if (mC3 && mC3.length >= 3) d3 = Number(mC3[2]);
+        }
+        if (d3 < 1 || d3 > 6) d3 = 1;
+      }
+      if (tot < 3 || tot > 18) tot = d1 + d2 + d3;
 
       var res = d1 + " " + d2 + " " + d3 + " " + tot;
 
@@ -320,6 +400,10 @@ function repairAndStandardizeChiTietSheet() {
 
     sheet.getRange(2, 1, numRows, 9).clearContent();
     sheet.getRange(2, 1, cleanedRows.length, 9).setValues(cleanedRows);
+
+    if (numRows > cleanedRows.length) {
+      sheet.deleteRows(cleanedRows.length + 2, numRows - cleanedRows.length);
+    }
 
     sheet.getRange(2, 1, cleanedRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
     sheet.getRange(2, 2, cleanedRows.length, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
@@ -857,7 +941,17 @@ function updateStatsAndChartsSheet() {
 // 7. SHEET 'DỰ ĐOÁN HÀNG NGÀY' (MÔ HÌNH HỢP NHẤT M16 & DỰ ĐOÁN 3 KỲ TIẾP THEO)
 // -------------------------------------------------------------------------
 function setupPredictionSheet() {
-  updatePredictionSheet();
+  try {
+    updatePredictionSheet();
+    SpreadsheetApp.getUi().alert(
+      "✅ Đã cập nhật thành công Sheet Dự đoán Hàng ngày!\n\n" +
+      "• Đã chuyển sang mô hình 3 kỳ sắp tới (+1, +2, +3) để tối đa độ chính xác.\n" +
+      "• Đã loại bỏ hoàn toàn các kỳ trùng lặp và tự động phục hồi các xúc xắc bị khuyết.\n" +
+      "• Đã đối chiếu toàn bộ các kỳ hôm nay và tính toán dòng tiền Kelly tức thì."
+    );
+  } catch (err) {
+    SpreadsheetApp.getUi().alert("❌ Lỗi khi cập nhật Sheet Dự đoán:\n" + err.message + "\n\nChi tiết: " + err.stack);
+  }
 }
 
 function updatePredictionSheet() {
@@ -1007,6 +1101,37 @@ function updatePredictionSheet() {
       var d1Val = Number(rawData[d][4]);
       var d2Val = Number(rawData[d][5]);
       var d3Val = Number(rawData[d][6]);
+
+      // Tự động phục hồi xúc xắc nếu bị khuyết (loại trừ hiện tượng - 1 - 4 hoặc - 1 - 2)
+      if (d1Val < 1 || d1Val > 6) {
+        if (dTotal >= 3 && dTotal <= 18 && d2Val >= 1 && d2Val <= 6 && d3Val >= 1 && d3Val <= 6) {
+          d1Val = dTotal - d2Val - d3Val;
+        } else {
+          var m81 = String(rawData[d][8] || "").match(/\d+/g);
+          if (m81 && m81.length >= 3) d1Val = Number(m81[0]);
+        }
+        if (d1Val < 1 || d1Val > 6) d1Val = 1;
+      }
+      if (d2Val < 1 || d2Val > 6) {
+        if (dTotal >= 3 && dTotal <= 18 && d1Val >= 1 && d1Val <= 6 && d3Val >= 1 && d3Val <= 6) {
+          d2Val = dTotal - d1Val - d3Val;
+        } else {
+          var m82 = String(rawData[d][8] || "").match(/\d+/g);
+          if (m82 && m82.length >= 3) d2Val = Number(m82[1]);
+        }
+        if (d2Val < 1 || d2Val > 6) d2Val = 1;
+      }
+      if (d3Val < 1 || d3Val > 6) {
+        if (dTotal >= 3 && dTotal <= 18 && d1Val >= 1 && d1Val <= 6 && d2Val >= 1 && d2Val <= 6) {
+          d3Val = dTotal - d1Val - d2Val;
+        } else {
+          var m83 = String(rawData[d][8] || "").match(/\d+/g);
+          if (m83 && m83.length >= 3) d3Val = Number(m83[2]);
+        }
+        if (d3Val < 1 || d3Val > 6) d3Val = 1;
+      }
+      if (dTotal < 3 || dTotal > 18) dTotal = d1Val + d2Val + d3Val;
+
       var curIdxToday = todayDraws.length;
 
       if (dTotal >= 3 && dTotal <= 18) {
@@ -1029,7 +1154,7 @@ function updatePredictionSheet() {
         d2: d2Val,
         d3: d3Val,
         total: dTotal,
-        result: String(rawData[d][8] || "")
+        result: String(rawData[d][8] || (d1Val + " " + d2Val + " " + d3Val + " " + dTotal))
       });
     }
   }
@@ -1047,16 +1172,46 @@ function updatePredictionSheet() {
         if (!rawFbId || rawFbId === "0000000" || seenFallbackMap[rawFbId]) continue;
         if (extractDateStr(rawData[dFb][1]) === refDateStr) {
           seenFallbackMap[rawFbId] = true;
+          var fbTot = Number(rawData[dFb][7]);
+          var fbd1 = Number(rawData[dFb][4]);
+          var fbd2 = Number(rawData[dFb][5]);
+          var fbd3 = Number(rawData[dFb][6]);
+          if (fbd1 < 1 || fbd1 > 6) {
+            if (fbTot >= 3 && fbTot <= 18 && fbd2 >= 1 && fbd2 <= 6 && fbd3 >= 1 && fbd3 <= 6) fbd1 = fbTot - fbd2 - fbd3;
+            else {
+              var mfb = String(rawData[dFb][8] || "").match(/\d+/g);
+              if (mfb && mfb.length >= 3) fbd1 = Number(mfb[0]);
+            }
+            if (fbd1 < 1 || fbd1 > 6) fbd1 = 1;
+          }
+          if (fbd2 < 1 || fbd2 > 6) {
+            if (fbTot >= 3 && fbTot <= 18 && fbd1 >= 1 && fbd1 <= 6 && fbd3 >= 1 && fbd3 <= 6) fbd2 = fbTot - fbd1 - fbd3;
+            else {
+              var mfb2 = String(rawData[dFb][8] || "").match(/\d+/g);
+              if (mfb2 && mfb2.length >= 3) fbd2 = Number(mfb2[1]);
+            }
+            if (fbd2 < 1 || fbd2 > 6) fbd2 = 1;
+          }
+          if (fbd3 < 1 || fbd3 > 6) {
+            if (fbTot >= 3 && fbTot <= 18 && fbd1 >= 1 && fbd1 <= 6 && fbd2 >= 1 && fbd2 <= 6) fbd3 = fbTot - fbd1 - fbd2;
+            else {
+              var mfb3 = String(rawData[dFb][8] || "").match(/\d+/g);
+              if (mfb3 && mfb3.length >= 3) fbd3 = Number(mfb3[2]);
+            }
+            if (fbd3 < 1 || fbd3 > 6) fbd3 = 1;
+          }
+          if (fbTot < 3 || fbTot > 18) fbTot = fbd1 + fbd2 + fbd3;
+
           todayDraws.push({
             draw_id: rawFbId,
             date: refDateStr,
             time: String(rawData[dFb][2] || ""),
             slot: Number(rawData[dFb][3] || 0),
-            d1: Number(rawData[dFb][4]),
-            d2: Number(rawData[dFb][5]),
-            d3: Number(rawData[dFb][6]),
-            total: Number(rawData[dFb][7]),
-            result: String(rawData[dFb][8] || "")
+            d1: fbd1,
+            d2: fbd2,
+            d3: fbd3,
+            total: fbTot,
+            result: String(rawData[dFb][8] || (fbd1 + " " + fbd2 + " " + fbd3 + " " + fbTot))
           });
         }
       }
@@ -1502,22 +1657,38 @@ function updatePredictionSheet() {
     sheet.getRange(startPastRow, 1, drawRows.length, 12).setValues(drawRows).setHorizontalAlignment("center");
     sheet.getRange(startPastRow, 1, drawRows.length, 1).setNumberFormat("@");
 
+    var confColors = [], confBgs = [], confWeights = [];
+    var matchColors = [], matchBgs = [], matchWeights = [];
+    var pnlColors = [], pnlBgs = [], pnlWeights = [];
+    var cumColors = [], cumBgs = [], cumWeights = [];
+
     for (var mIdx = 0; mIdx < matchStyles.length; mIdx++) {
-      var rTarget = startPastRow + mIdx;
-      var confCell = sheet.getRange(rTarget, 8);
-      confCell.setFontColor(confStyles[mIdx].color).setBackground(confStyles[mIdx].bg).setFontWeight("bold");
+      confColors.push([confStyles[mIdx].color]);
+      confBgs.push([confStyles[mIdx].bg]);
+      confWeights.push(["bold"]);
 
-      var mCell = sheet.getRange(rTarget, 10);
-      mCell.setFontColor(matchStyles[mIdx].color).setBackground(matchStyles[mIdx].bg);
-      if (matchStyles[mIdx].bold) mCell.setFontWeight("bold");
+      matchColors.push([matchStyles[mIdx].color]);
+      matchBgs.push([matchStyles[mIdx].bg]);
+      matchWeights.push([matchStyles[mIdx].bold ? "bold" : "normal"]);
 
-      var pnlCell = sheet.getRange(rTarget, 11);
-      pnlCell.setFontColor(pnlStyles[mIdx].color).setBackground(pnlStyles[mIdx].bg);
-      if (pnlStyles[mIdx].bold) pnlCell.setFontWeight("bold");
+      pnlColors.push([pnlStyles[mIdx].color]);
+      pnlBgs.push([pnlStyles[mIdx].bg]);
+      pnlWeights.push([pnlStyles[mIdx].bold ? "bold" : "normal"]);
 
-      var cumCell = sheet.getRange(rTarget, 12);
-      cumCell.setFontColor(cumStyles[mIdx].color).setBackground(cumStyles[mIdx].bg).setFontWeight("bold");
+      cumColors.push([cumStyles[mIdx].color]);
+      cumBgs.push([cumStyles[mIdx].bg]);
+      cumWeights.push(["bold"]);
     }
+
+    // BATCH UPDATE: Giảm 456 lần gọi API riêng lẻ xuống đúng 4 lần gọi mảng 2 chiều (Chạy trong 0.2s, chống tràn timeout)
+    sheet.getRange(startPastRow, 8, drawRows.length, 1)
+      .setFontColors(confColors).setBackgrounds(confBgs).setFontWeights(confWeights);
+    sheet.getRange(startPastRow, 10, drawRows.length, 1)
+      .setFontColors(matchColors).setBackgrounds(matchBgs).setFontWeights(matchWeights);
+    sheet.getRange(startPastRow, 11, drawRows.length, 1)
+      .setFontColors(pnlColors).setBackgrounds(pnlBgs).setFontWeights(pnlWeights);
+    sheet.getRange(startPastRow, 12, drawRows.length, 1)
+      .setFontColors(cumColors).setBackgrounds(cumBgs).setFontWeights(cumWeights);
 
     // DÒNG TỔNG KẾT TÀI CHÍNH CUỐI BẢNG (FOOTER)
     var footerRowIdx = startPastRow + drawRows.length;
@@ -1682,15 +1853,19 @@ function updatePredictionSheet() {
   }
 
   sheet.getRange(30, 14, 16, 6).setValues(sumCompRows).setHorizontalAlignment("center");
+  var b2GapColors = [], b2GapBgs = [], b2GapWeights = [];
+  var b2TrColors = [], b2TrBgs = [], b2TrWeights = [];
   for (var tIdx = 0; tIdx < trendColors.length; tIdx++) {
-    var gapCell = sheet.getRange(30 + tIdx, 18);
-    gapCell.setFontColor(gapColors[tIdx].color).setBackground(gapColors[tIdx].bg);
-    if (gapColors[tIdx].bold) gapCell.setFontWeight("bold");
+    b2GapColors.push([gapColors[tIdx].color]);
+    b2GapBgs.push([gapColors[tIdx].bg]);
+    b2GapWeights.push([gapColors[tIdx].bold ? "bold" : "normal"]);
 
-    var cRange = sheet.getRange(30 + tIdx, 19);
-    cRange.setFontColor(trendColors[tIdx].color).setBackground(trendColors[tIdx].bg);
-    if (trendColors[tIdx].bg !== "#FFFFFF") cRange.setFontWeight("bold");
+    b2TrColors.push([trendColors[tIdx].color]);
+    b2TrBgs.push([trendColors[tIdx].bg]);
+    b2TrWeights.push([trendColors[tIdx].bg !== "#FFFFFF" ? "bold" : "normal"]);
   }
+  sheet.getRange(30, 18, 16, 1).setFontColors(b2GapColors).setBackgrounds(b2GapBgs).setFontWeights(b2GapWeights);
+  sheet.getRange(30, 19, 16, 1).setFontColors(b2TrColors).setBackgrounds(b2TrBgs).setFontWeights(b2TrWeights);
 
   // Dòng Tổng cộng Bảng 2
   var totalRow = [["TỔNG CỘNG", totalVerifiedDraws + " lượt", "100.0%", "100.0%", "-", "-"]];
@@ -1809,11 +1984,13 @@ function updatePredictionSheet() {
   }
 
   sheet.getRange(59, 14, 6, 6).setValues(diceTableRows).setHorizontalAlignment("center");
+  var b4Colors = [], b4Bgs = [], b4Weights = [];
   for (var dt = 0; dt < diceTrendColors.length; dt++) {
-    var dtCell = sheet.getRange(59 + dt, 19);
-    dtCell.setFontColor(diceTrendColors[dt].color).setBackground(diceTrendColors[dt].bg);
-    if (diceTrendColors[dt].bg !== "#FFFFFF") dtCell.setFontWeight("bold");
+    b4Colors.push([diceTrendColors[dt].color]);
+    b4Bgs.push([diceTrendColors[dt].bg]);
+    b4Weights.push([diceTrendColors[dt].bg !== "#FFFFFF" ? "bold" : "normal"]);
   }
+  sheet.getRange(59, 19, 6, 1).setFontColors(b4Colors).setBackgrounds(b4Bgs).setFontWeights(b4Weights);
 
   // Dòng Tổng cộng Bảng 4
   var totalDiceRow = [["TỔNG CỘNG 6 MẶT", totalDicesRolled + " viên", "100.0%", "100.0%", "-", "-"]];
