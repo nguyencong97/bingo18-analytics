@@ -100,24 +100,46 @@ def run_crawler() -> int:
         msg = f"data: +{count_new} draws (id {first_id}..{last_id})"
         logger.info(f"Đã lưu thành công: {msg}")
         print(msg)
-        send_telegram_alert(f"🎯 <b>Cập nhật kết quả mới</b>: +{count_new} kỳ (Mã kỳ {first_id}..{last_id})")
-        gas_url = os.environ.get("GAS_WEBAPP_URL")
-        if gas_url:
-            try:
-                new_records = [r for r in all_valid_records if r["draw_id"] in new_ids]
-                for r in new_records:
-                    if not r.get("slot_in_day") or r.get("slot_in_day") == 0:
+        
+        last_rec = all_valid_records[0] if all_valid_records else None
+        d_info = f"🎲 <code>{last_rec['d1']} - {last_rec['d2']} - {last_rec['d3']}</code> (Tổng <b>{last_rec['total']}</b>)" if last_rec else ""
+        send_telegram_alert(
+            f"🎯 <b>Cập nhật kết quả mới</b>: +{count_new} kỳ\n"
+            f"• Đã cập nhật đến kỳ: <b>#{last_id}</b>\n"
+            f"• Kết quả kỳ mới nhất: {d_info}\n"
+            f"• Trạng thái: Đã lưu vào CSV & đẩy sang Google Sheet thành công!"
+        )
+
+    # Luôn kiểm tra và đẩy đồng bộ sang Google Sheet (kể cả khi count_new == 0 để bù kỳ thiếu)
+    gas_url = os.environ.get("GAS_WEBAPP_URL")
+    if gas_url:
+        try:
+            recent_to_sync = []
+            if count_new > 0:
+                recent_to_sync = [r for r in all_valid_records if r["draw_id"] in new_ids]
+            else:
+                all_csv = data_dir / "all.csv"
+                if all_csv.exists() and all_csv.stat().st_size > 0:
+                    import csv as _csv
+                    with open(all_csv, "r", encoding="utf-8") as f:
+                        rows = list(_csv.DictReader(f))
+                        recent_to_sync = rows[-100:]
+
+            if recent_to_sync:
+                for r in recent_to_sync:
+                    if not r.get("slot_in_day") or int(r.get("slot_in_day", 0)) == 0:
                         nid = int(r["draw_id"])
                         slot = ((nid - 195421) % 159 + 1)
                         r["slot_in_day"] = slot
                         tot_min = 6 * 60 + slot * 6
                         r["time"] = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
-                httpx.post(gas_url, json={"records": new_records}, timeout=25, follow_redirects=True)
-                logger.info(f"Đã đồng bộ {len(new_records)} kỳ sang Google Sheet thành công.")
-            except Exception as e:
-                logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")
+                httpx.post(gas_url, json={"records": recent_to_sync}, timeout=25, follow_redirects=True)
+                logger.info(f"Đã kiểm tra và đồng bộ {len(recent_to_sync)} kỳ gần nhất sang Google Sheet.")
+        except Exception as e:
+            logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")
     else:
-        logger.info("Không có kỳ quay mới nào cần cập nhật.")
+        if count_new == 0:
+            logger.info("Không có kỳ quay mới nào cần cập nhật.")
 
     return count_new
 

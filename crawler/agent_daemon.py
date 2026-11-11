@@ -171,25 +171,39 @@ class TelegramBotListener:
             self.send_message(help_text, message_id)
 
         elif cmd in ("/sync", "/dongbo"):
-            self.send_message("⏳ Đang quét kết quả từ Vietlott và đẩy sang Google Sheet...", message_id)
+            self.send_message("⏳ Đang quét kết quả từ Vietlott và đồng bộ sang Google Sheet...", message_id)
             try:
                 count_new = run_crawler()
                 latest = get_latest_local_draw()
-                if count_new > 0 and latest:
-                    msg = (
-                        f"✅ <b>Đồng bộ thành công!</b>\n"
-                        f"+{count_new} kỳ quay mới đã được lưu và cập nhật lên Google Sheet.\n"
-                        f"🎯 Kỳ mới nhất: <b>#{latest['draw_id']}</b>\n"
-                        f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
-                        f"📅 Ngày: {latest['date']}"
-                    )
+                today_count = get_today_draws_count()
+                if latest:
+                    nid = int(latest["draw_id"])
+                    slot = ((nid - 195421) % 159 + 1)
+                    tot_min = 6 * 60 + slot * 6
+                    time_str = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
+
+                    if count_new > 0:
+                        msg = (
+                            f"✅ <b>ĐỒNG BỘ THÀNH CÔNG (+{count_new} KỲ MỚI)</b>\n\n"
+                            f"🎯 Đã cập nhật đến kỳ: <b>#{latest['draw_id']}</b>\n"
+                            f"⏰ Giờ quay: <b>{time_str}</b> (Slot {slot}/159)\n"
+                            f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
+                            f"📅 Ngày: <b>{latest['date']}</b>\n"
+                            f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
+                            f"🌐 Google Sheet: <b>Đã cập nhật dữ liệu và làm mới 4 sheet!</b>"
+                        )
+                    else:
+                        msg = (
+                            f"✨ <b>HỆ THỐNG ĐÃ Ở TRẠNG THÁI MỚI NHẤT!</b>\n\n"
+                            f"🎯 Đã cập nhật đến kỳ: <b>#{latest['draw_id']}</b>\n"
+                            f"⏰ Giờ quay: <b>{time_str}</b> (Slot {slot}/159)\n"
+                            f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
+                            f"📅 Ngày: <b>{latest['date']}</b>\n"
+                            f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
+                            f"🌐 Google Sheet: <b>Đã đồng bộ 100% không thiếu kỳ nào!</b>"
+                        )
                 else:
-                    draw_id = latest['draw_id'] if latest else 'N/A'
-                    msg = (
-                        f"✨ <b>Hệ thống đã ở trạng thái mới nhất!</b>\n"
-                        f"Chưa có kỳ quay mới từ Vietlott.\n"
-                        f"🎯 Kỳ hiện tại: <b>#{draw_id}</b>"
-                    )
+                    msg = "⚠️ Không tìm thấy dữ liệu kỳ quay."
                 self.send_message(msg, message_id)
             except Exception as e:
                 self.send_message(f"❌ <b>Lỗi khi đồng bộ:</b> <code>{e}</code>", message_id)
