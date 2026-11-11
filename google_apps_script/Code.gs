@@ -1329,29 +1329,22 @@ function updatePredictionSheet() {
   sheet.getRange(24, 1, 1, 12).setValues(tableHeaders)
     .setFontWeight("bold").setBackground("#4338CA").setFontColor("#FFFFFF").setHorizontalAlignment("center");
 
-  // DỰ ĐOÁN 10 KỲ TIẾP THEO (+1 đến +10)
+  // DỰ ĐOÁN 3 KỲ TIẾP THEO (+1 đến +3) - TẬP TRUNG TỐI ĐA ĐỘ CHÍNH XÁC
   var lastTodayDraw = (totalTodayDraws > 0) ? todayDraws[totalTodayDraws - 1] : null;
   var lastDrawNum = lastTodayDraw ? Number(lastTodayDraw.draw_id) : (rawData.length > 0 ? Number(String(rawData[rawData.length - 1][0]).replace("#","")) : 195579);
   var lastSlot = ((lastDrawNum - 195580) % 159) + 1;
   if (lastSlot < 1 || isNaN(lastSlot)) lastSlot = (totalTodayDraws > 0 ? totalTodayDraws : 1);
   var lastSumForPred = lastTodayDraw ? lastTodayDraw.total : (lastSum || 10);
 
-  var upcomingPreds = predictMultiStep(lastSumForPred, 10, isLateSession);
+  var upcomingPreds = predictMultiStep(lastSumForPred, 3, isLateSession);
   var upcomingRows = [];
   var upcomingColors = [
     { bg: "#FEF3C7", text: "#92400E", label: "+1 (Sắp quay)" },
     { bg: "#E0E7FF", text: "#3730A3", label: "+2 (Sắp quay)" },
-    { bg: "#EDE9FE", text: "#5B21B6", label: "+3 (Sắp quay)" },
-    { bg: "#F1F5F9", text: "#1E293B", label: "+4" },
-    { bg: "#F1F5F9", text: "#1E293B", label: "+5" },
-    { bg: "#F8FAFC", text: "#334155", label: "+6" },
-    { bg: "#F8FAFC", text: "#334155", label: "+7" },
-    { bg: "#F8FAFC", text: "#334155", label: "+8" },
-    { bg: "#F8FAFC", text: "#334155", label: "+9" },
-    { bg: "#F8FAFC", text: "#334155", label: "+10" }
+    { bg: "#EDE9FE", text: "#5B21B6", label: "+3 (Sắp quay)" }
   ];
 
-  for (var upIdx = 0; upIdx < 10; upIdx++) {
+  for (var upIdx = 0; upIdx < 3; upIdx++) {
     var upNum = lastDrawNum + upIdx + 1;
     var upIdStr = String(upNum).padStart(7, "0");
     var upSlot = (lastSlot + upIdx + 1);
@@ -1390,13 +1383,10 @@ function updatePredictionSheet() {
     ]);
   }
 
-  sheet.getRange(25, 1, 10, 12).setValues(upcomingRows).setHorizontalAlignment("center");
-  for (var upStyleIdx = 0; upStyleIdx < 10; upStyleIdx++) {
+  sheet.getRange(25, 1, 3, 12).setValues(upcomingRows).setHorizontalAlignment("center");
+  for (var upStyleIdx = 0; upStyleIdx < 3; upStyleIdx++) {
     var rowRange = sheet.getRange(25 + upStyleIdx, 1, 1, 12);
-    rowRange.setBackground(upcomingColors[upStyleIdx].bg).setFontColor(upcomingColors[upStyleIdx].text);
-    if (upStyleIdx < 3) {
-      rowRange.setFontWeight("bold");
-    }
+    rowRange.setBackground(upcomingColors[upStyleIdx].bg).setFontColor(upcomingColors[upStyleIdx].text).setFontWeight("bold");
   }
 
   // CÁC KỲ ĐÃ QUAY TRONG NGÀY (SẮP XẾP TỪ KỲ MỚI NHẤT ĐẾN KỲ CŨ NHẤT)
@@ -1507,28 +1497,30 @@ function updatePredictionSheet() {
     cumStyles.push({ color: cumColor, bg: cumBg, bold: true });
   }
 
+  var startPastRow = 28;
   if (drawRows.length > 0) {
-    sheet.getRange(35, 1, drawRows.length, 12).setValues(drawRows).setHorizontalAlignment("center");
-    sheet.getRange(35, 1, drawRows.length, 1).setNumberFormat("@");
+    sheet.getRange(startPastRow, 1, drawRows.length, 12).setValues(drawRows).setHorizontalAlignment("center");
+    sheet.getRange(startPastRow, 1, drawRows.length, 1).setNumberFormat("@");
 
     for (var mIdx = 0; mIdx < matchStyles.length; mIdx++) {
-      var confCell = sheet.getRange(35 + mIdx, 8);
+      var rTarget = startPastRow + mIdx;
+      var confCell = sheet.getRange(rTarget, 8);
       confCell.setFontColor(confStyles[mIdx].color).setBackground(confStyles[mIdx].bg).setFontWeight("bold");
 
-      var mCell = sheet.getRange(35 + mIdx, 10);
+      var mCell = sheet.getRange(rTarget, 10);
       mCell.setFontColor(matchStyles[mIdx].color).setBackground(matchStyles[mIdx].bg);
       if (matchStyles[mIdx].bold) mCell.setFontWeight("bold");
 
-      var pnlCell = sheet.getRange(35 + mIdx, 11);
+      var pnlCell = sheet.getRange(rTarget, 11);
       pnlCell.setFontColor(pnlStyles[mIdx].color).setBackground(pnlStyles[mIdx].bg);
       if (pnlStyles[mIdx].bold) pnlCell.setFontWeight("bold");
 
-      var cumCell = sheet.getRange(35 + mIdx, 12);
+      var cumCell = sheet.getRange(rTarget, 12);
       cumCell.setFontColor(cumStyles[mIdx].color).setBackground(cumStyles[mIdx].bg).setFontWeight("bold");
     }
 
     // DÒNG TỔNG KẾT TÀI CHÍNH CUỐI BẢNG (FOOTER)
-    var footerRowIdx = 35 + drawRows.length;
+    var footerRowIdx = startPastRow + drawRows.length;
     var footerLabel = "💰 TỔNG KẾT TÀI CHÍNH HÔM NAY (KELLY 10K/LỆNH | VỐN ĐÃ ĐÁNH: " + totalCostToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " Đ | THU VỀ: " + totalPayoutToday.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " Đ)";
     sheet.getRange(footerRowIdx, 1, 1, 10).merge().setValue(footerLabel)
       .setFontWeight("bold").setFontSize(10).setBackground("#0F172A").setFontColor("#FFFFFF").setHorizontalAlignment("center");
@@ -1549,7 +1541,7 @@ function updatePredictionSheet() {
   }
 
   var curLast = sheet.getLastRow();
-  var neededEnd = 35 + drawRows.length; // bao gồm cả dòng footer
+  var neededEnd = startPastRow + drawRows.length; // bao gồm cả dòng footer
   if (curLast > neededEnd) {
     sheet.getRange(neededEnd + 1, 1, curLast - neededEnd, 12).clearContent().setBackground(null);
   }
