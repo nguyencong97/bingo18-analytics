@@ -20,6 +20,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+LAST_GAS_STATUS = {
+    "status": "pending",
+    "url": None,
+    "http_code": None,
+    "response": None,
+    "count_appended": 0,
+    "time": None
+}
+
+
 def run_crawler() -> int:
     """Thực thi một chu kỳ cào kết quả Bingo18.
 
@@ -133,13 +143,28 @@ def run_crawler() -> int:
                         r["slot_in_day"] = slot
                         tot_min = 6 * 60 + slot * 6
                         r["time"] = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
-                httpx.post(gas_url, json={"records": recent_to_sync}, timeout=25, follow_redirects=True)
-                logger.info(f"Đã kiểm tra và đồng bộ {len(recent_to_sync)} kỳ gần nhất sang Google Sheet.")
+                res = httpx.post(gas_url, json={"records": recent_to_sync}, timeout=30, follow_redirects=True)
+                LAST_GAS_STATUS["http_code"] = res.status_code
+                LAST_GAS_STATUS["response"] = res.text[:300]
+                LAST_GAS_STATUS["time"] = datetime.now().isoformat()
+                LAST_GAS_STATUS["url"] = gas_url[:35] + "..." if len(gas_url) > 35 else gas_url
+                
+                logger.info(f"Đã gọi GAS Webhook ({res.status_code}): {res.text[:150]}")
+                if res.status_code == 200:
+                    try:
+                        res_json = res.json()
+                        LAST_GAS_STATUS["status"] = res_json.get("status", "ok")
+                        LAST_GAS_STATUS["count_appended"] = res_json.get("count", 0)
+                    except Exception:
+                        LAST_GAS_STATUS["status"] = "non-json-200"
+                else:
+                    LAST_GAS_STATUS["status"] = f"http-error-{res.status_code}"
         except Exception as e:
+            LAST_GAS_STATUS["status"] = "exception"
+            LAST_GAS_STATUS["response"] = str(e)
             logger.warning(f"Lỗi khi đồng bộ Google Sheet: {e}")
     else:
-        if count_new == 0:
-            logger.info("Không có kỳ quay mới nào cần cập nhật.")
+        LAST_GAS_STATUS["status"] = "no-gas-url"
 
     return count_new
 

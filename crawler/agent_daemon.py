@@ -182,6 +182,19 @@ class TelegramBotListener:
                     tot_min = 6 * 60 + slot * 6
                     time_str = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
 
+                    from crawler.run import LAST_GAS_STATUS
+                    gas_msg = ""
+                    if LAST_GAS_STATUS["status"] == "ok":
+                        gas_msg = f"🌐 Google Sheet: <b>Đã đồng bộ thành công! (+{LAST_GAS_STATUS['count_appended']} dòng mới)</b>"
+                    elif LAST_GAS_STATUS["status"] == "no-gas-url":
+                        gas_msg = "🌐 Google Sheet: <b>⚠️ Chưa cấu hình biến GAS_WEBAPP_URL trên Render!</b>"
+                    elif LAST_GAS_STATUS["status"] == "non-json-200":
+                        gas_msg = f"🌐 Google Sheet: <b>⚠️ Lỗi: Webhook bị chuyển hướng (Google Sign-In). Hãy triển khai lại Apps Script với quyền truy cập 'Anyone' (Bất kỳ ai).</b>"
+                    elif LAST_GAS_STATUS["status"] != "pending":
+                        gas_msg = f"🌐 Google Sheet: <b>⚠️ Lỗi ({LAST_GAS_STATUS['status']}):</b> <code>{str(LAST_GAS_STATUS['response'])[:120]}</code>"
+                    else:
+                        gas_msg = "🌐 Google Sheet: <b>Đang chờ lượt đồng bộ tiếp theo.</b>"
+
                     if count_new > 0:
                         msg = (
                             f"✅ <b>ĐỒNG BỘ THÀNH CÔNG (+{count_new} KỲ MỚI)</b>\n\n"
@@ -190,7 +203,7 @@ class TelegramBotListener:
                             f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
                             f"📅 Ngày: <b>{latest['date']}</b>\n"
                             f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
-                            f"🌐 Google Sheet: <b>Đã cập nhật dữ liệu và làm mới 4 sheet!</b>"
+                            f"{gas_msg}"
                         )
                     else:
                         msg = (
@@ -200,7 +213,7 @@ class TelegramBotListener:
                             f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
                             f"📅 Ngày: <b>{latest['date']}</b>\n"
                             f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
-                            f"🌐 Google Sheet: <b>Đã đồng bộ 100% không thiếu kỳ nào!</b>"
+                            f"{gas_msg}"
                         )
                 else:
                     msg = "⚠️ Không tìm thấy dữ liệu kỳ quay."
@@ -331,10 +344,12 @@ def start_health_server():
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
                 latest = get_latest_local_draw()
+                from crawler.run import LAST_GAS_STATUS
                 resp = json.dumps({
                     "status": "healthy",
                     "service": "bingo18-agent-daemon",
-                    "latest_draw": latest.get("draw_id") if latest else None
+                    "latest_draw": latest.get("draw_id") if latest else None,
+                    "gas_sync": LAST_GAS_STATUS
                 })
                 self.wfile.write(resp.encode("utf-8"))
 
