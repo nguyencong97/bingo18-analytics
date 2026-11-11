@@ -49,6 +49,7 @@ def load_env_file():
 load_env_file()
 
 from crawler.alerts import send_telegram_alert, ping_heartbeat
+from crawler.realtime_scraper import compute_draw_metadata
 from crawler.run import run_crawler
 
 # Cấu hình logging
@@ -173,14 +174,12 @@ class TelegramBotListener:
         elif cmd in ("/sync", "/dongbo"):
             self.send_message("⏳ Đang quét kết quả từ Vietlott và đồng bộ sang Google Sheet...", message_id)
             try:
-                count_new = run_crawler()
+                count_new = run_crawler(force_sync=True)
                 latest = get_latest_local_draw()
                 today_count = get_today_draws_count()
                 if latest:
                     nid = int(latest["draw_id"])
-                    slot = ((nid - 195421) % 159 + 1)
-                    tot_min = 6 * 60 + slot * 6
-                    time_str = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
+                    date_str, time_str, slot, _ = compute_draw_metadata(nid)
 
                     from crawler.run import LAST_GAS_STATUS
                     gas_msg = ""
@@ -203,7 +202,7 @@ class TelegramBotListener:
                             f"🎯 Đã cập nhật đến kỳ: <b>#{latest['draw_id']}</b>\n"
                             f"⏰ Giờ quay: <b>{time_str}</b> (Slot {slot}/159)\n"
                             f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
-                            f"📅 Ngày: <b>{latest['date']}</b>\n"
+                            f"📅 Ngày: <b>{date_str}</b>\n"
                             f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
                             f"{gas_msg}"
                         )
@@ -213,7 +212,7 @@ class TelegramBotListener:
                             f"🎯 Đã cập nhật đến kỳ: <b>#{latest['draw_id']}</b>\n"
                             f"⏰ Giờ quay: <b>{time_str}</b> (Slot {slot}/159)\n"
                             f"🎲 Kết quả: <code>{latest['d1']} - {latest['d2']} - {latest['d3']}</code> (Tổng <b>{latest['total']}</b>)\n"
-                            f"📅 Ngày: <b>{latest['date']}</b>\n"
+                            f"📅 Ngày: <b>{date_str}</b>\n"
                             f"📊 Tiến độ hôm nay: <b>{today_count}/159 kỳ</b>\n"
                             f"{gas_msg}"
                         )
@@ -231,9 +230,7 @@ class TelegramBotListener:
 
             if latest:
                 nid = int(latest["draw_id"])
-                slot = ((nid - 195421) % 159 + 1)
-                tot_min = 6 * 60 + slot * 6
-                time_str = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
+                _, time_str, slot, _ = compute_draw_metadata(nid)
 
                 status_text = (
                     "📊 <b>TRẠNG THÁI BINGO18 AGENT DAEMON</b>\n\n"
@@ -253,9 +250,7 @@ class TelegramBotListener:
             if latest:
                 nid = int(latest["draw_id"])
                 next_id = nid + 1
-                next_slot = ((next_id - 195421) % 159 + 1)
-                tot_min = 6 * 60 + next_slot * 6
-                next_time = f"{tot_min // 60:02d}:{tot_min % 60:02d}"
+                _, next_time, next_slot, _ = compute_draw_metadata(next_id)
 
                 p_text = (
                     f"🔮 <b>GỢI Ý KỲ TIẾP THEO #{str(next_id).zfill(7)}</b>\n"
@@ -318,8 +313,8 @@ def autonomous_loop():
                         git_backup(count_new, latest["draw_id"], latest["draw_id"])
 
                 ping_heartbeat("ok")
-                # Trong giờ quay: nghỉ 180 giây (3 phút) rồi kiểm tra tiếp
-                time.sleep(180)
+                # Trong giờ quay: kiểm tra mỗi 120 giây (2 phút) để bóc tách kết quả sớm nhất
+                time.sleep(120)
             else:
                 logger.info(f"[{now_vn.strftime('%H:%M:%S')}] Ngoài giờ quay số Bingo18 (06:00 - 22:05 VN). Chế độ nghỉ đêm.")
                 # Ngoài giờ quay: nghỉ 10 phút rồi kiểm tra lại giờ

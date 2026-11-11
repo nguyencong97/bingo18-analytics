@@ -33,6 +33,7 @@ function onOpen() {
     .addItem("🚀 Kích hoạt Tự động hóa 24/7 (10 phút/lần)", "installAutoJob")
     .addItem("🔄 Đồng bộ & Cập nhật tất cả ngay bây giờ", "manualRunAll")
     .addSeparator()
+    .addItem("🛡️ Dọn dẹp kỳ trùng lặp & Sắp xếp dữ liệu", "cleanDuplicateDrawsWithAlert")
     .addItem("🧹 Sửa & Chuẩn hóa toàn bộ Sheet Chi tiết (Format đồng nhất 100%)", "repairAndStandardizeChiTietSheetWithAlert")
     .addItem("📊 Tạo / Cập nhật Sheet Thống kê & Biểu đồ", "setupStatsAndChartsSheet")
     .addItem("🔮 Tạo / Cập nhật Sheet Dự đoán Hàng ngày", "setupPredictionSheet")
@@ -156,6 +157,61 @@ function onEdit(e) {
 
 // -------------------------------------------------------------------------
 // 3. SỬA VÀ CHUẨN HÓA ĐỊNH DẠNG SHEET 'CHI TIẾT' (ĐỒNG NHẤT 100% 9 CỘT)
+// -------------------------------------------------------------------------
+function cleanDuplicateDrawsWithAlert() {
+  var count = cleanDuplicateDraws();
+  SpreadsheetApp.getUi().alert(
+    "🛡️ Dọn dẹp kỳ trùng lặp hoàn tất!\n\n" +
+    (count > 0 ? "• Đã phát hiện và loại bỏ: " + count + " dòng trùng lặp.\n" : "• Dữ liệu hoàn toàn sạch sẽ, không có dòng nào trùng lặp.\n") +
+    "• Toàn bộ các sheet Thống kê & Dự đoán đã được đồng bộ chuẩn xác!"
+  );
+}
+
+function cleanDuplicateDraws() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+
+  var numRows = lastRow - 1;
+  var rawValues = sheet.getRange(2, 1, numRows, 9).getValues();
+  var seenMap = {};
+  var uniqueRows = [];
+  var dupCount = 0;
+
+  for (var r = 0; r < rawValues.length; r++) {
+    var row = rawValues[r];
+    var rawId = String(row[0]).replace(/[^0-9]/g, "").padStart(7, "0");
+    if (!rawId || rawId === "0000000") continue;
+    if (seenMap[rawId]) {
+      dupCount++;
+      continue;
+    }
+    seenMap[rawId] = true;
+    row[0] = rawId;
+    uniqueRows.push(row);
+  }
+
+  if (dupCount > 0) {
+    uniqueRows.sort(function(a, b) { return Number(a[0]) - Number(b[0]); });
+    sheet.getRange(2, 1, numRows, 9).clearContent();
+    sheet.getRange(2, 1, uniqueRows.length, 9).setValues(uniqueRows);
+    
+    // Đồng bộ lại định dạng các cột
+    sheet.getRange(2, 1, uniqueRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
+    sheet.getRange(2, 2, uniqueRows.length, 1).setNumberFormat("yyyy-mm-dd").setHorizontalAlignment("center");
+    sheet.getRange(2, 3, uniqueRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
+    sheet.getRange(2, 4, uniqueRows.length, 1).setNumberFormat("#,##0").setHorizontalAlignment("center");
+    sheet.getRange(2, 5, uniqueRows.length, 4).setNumberFormat("#,##0").setHorizontalAlignment("center");
+    sheet.getRange(2, 9, uniqueRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
+
+    updateStatsAndChartsSheet();
+    updatePredictionSheet();
+    updatePredictionHistorySheet();
+  }
+  return dupCount;
+}
+
 // -------------------------------------------------------------------------
 function repairAndStandardizeChiTietSheetWithAlert() {
   repairAndStandardizeChiTietSheet();
@@ -2277,11 +2333,11 @@ function doPost(e) {
     var lastRow = sheet.getLastRow();
     var existingIds = {};
     if (lastRow > 1) {
-      var checkRows = Math.min(500, lastRow - 1);
-      var idValues = sheet.getRange(lastRow - checkRows + 1, 1, checkRows, 1).getValues();
+      // Quét 100% toàn bộ cột A để triệt tiêu mọi khả năng lọt trùng
+      var idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       for (var k = 0; k < idValues.length; k++) {
-        var rawId = String(idValues[k][0]).trim().replace("#", "").padStart(7, "0");
-        if (rawId) existingIds[rawId] = true;
+        var rawId = String(idValues[k][0]).replace(/[^0-9]/g, "").padStart(7, "0");
+        if (rawId && rawId !== "0000000") existingIds[rawId] = true;
       }
     }
 
@@ -2290,8 +2346,8 @@ function doPost(e) {
     for (var i = 0; i < records.length; i++) {
       var r = records[i];
       if (r && r.draw_id) {
-        var rId = String(r.draw_id).replace("#", "").trim().padStart(7, "0");
-        if (existingIds[rId]) continue;
+        var rId = String(r.draw_id).replace(/[^0-9]/g, "").padStart(7, "0");
+        if (!rId || rId === "0000000" || existingIds[rId]) continue;
 
         var numId = Number(rId);
         var slot = Number(r.slot_in_day);
@@ -2317,7 +2373,7 @@ function doPost(e) {
       }
     }
     if (rowsToAppend.length > 0) {
-      rowsToAppend.sort(function(a, b) { return String(a[0]).localeCompare(String(b[0])); });
+      rowsToAppend.sort(function(a, b) { return Number(a[0]) - Number(b[0]); });
       sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, 9).setValues(rowsToAppend);
       updateStatsAndChartsSheet();
       updatePredictionSheet();
