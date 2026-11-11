@@ -43,13 +43,17 @@ def fetch_realtime_draws(proxy_base_url: Optional[str] = None) -> List[Dict]:
     candidates = []
     
     # 1. Thử qua Cloudflare Worker Proxy nếu có
-    cf_url = proxy_base_url or os.getenv("CLOUDFLARE_WORKER_URL") or os.getenv("PROXY_URL")
+    cf_url = (
+        proxy_base_url
+        or os.getenv("VIETLOTT_PROXY_URL")
+        or os.getenv("CLOUDFLARE_WORKER_URL")
+        or os.getenv("PROXY_URL")
+    )
     if cf_url:
-        cf_clean = cf_url.rstrip("/")
-        if not cf_clean.endswith("/thong-ke"):
-            candidates.append(f"{cf_clean}/thong-ke")
-        else:
-            candidates.append(cf_clean)
+        from urllib.parse import urlparse
+        parsed = urlparse(cf_url.strip())
+        base_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else cf_url.rstrip("/")
+        candidates.append(f"{base_origin}/thong-ke")
 
     # 2. Luôn có endpoint trực tiếp Vietlott làm fallback
     candidates.append("https://vietlott.vn/vi/choi/bingo/thong-ke-so-trung")

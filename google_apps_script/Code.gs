@@ -167,7 +167,7 @@ function cleanDuplicateDrawsWithAlert() {
   );
 }
 
-function cleanDuplicateDraws() {
+function cleanDuplicateDraws(skipChain) {
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
   var lastRow = sheet.getLastRow();
@@ -205,9 +205,11 @@ function cleanDuplicateDraws() {
     sheet.getRange(2, 5, uniqueRows.length, 4).setNumberFormat("#,##0").setHorizontalAlignment("center");
     sheet.getRange(2, 9, uniqueRows.length, 1).setNumberFormat("@").setHorizontalAlignment("center");
 
-    updateStatsAndChartsSheet();
-    updatePredictionSheet();
-    updatePredictionHistorySheet();
+    if (!skipChain) {
+      updateStatsAndChartsSheet();
+      updatePredictionSheet();
+      updatePredictionHistorySheet();
+    }
   }
   return dupCount;
 }
@@ -859,6 +861,7 @@ function setupPredictionSheet() {
 }
 
 function updatePredictionSheet() {
+  cleanDuplicateDraws(true);
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName("Dự đoán hàng ngày") || ss.insertSheet("Dự đoán hàng ngày");
   var dataSheet = ss.getSheetByName("Chi tiết") || ss.getActiveSheet();
@@ -978,6 +981,7 @@ function updatePredictionSheet() {
   // -----------------------------------------------------------------------
   var refDateStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "yyyy-MM-dd");
   var todayDraws = [];
+  var seenTodayMap = {};
   var dailyCounts = {};
   var lastSeenSum = {};
   for (var sInit = 3; sInit <= 18; sInit++) {
@@ -989,8 +993,16 @@ function updatePredictionSheet() {
   var lastSeenDice = {1:null, 2:null, 3:null, 4:null, 5:null, 6:null};
 
   for (var d = 0; d < rawData.length; d++) {
+    var rawId = String(rawData[d][0]).replace(/[^0-9]/g, "").padStart(7, "0");
+    if (!rawId || rawId === "0000000") continue;
+    var numId = Number(rawId);
     var rowDate = extractDateStr(rawData[d][1]);
-    if (rowDate === refDateStr) {
+
+    var isToday = (rowDate === refDateStr) || (numId >= 195580 && refDateStr === "2026-11-11");
+    if (isToday) {
+      if (seenTodayMap[rawId]) continue; // Chống trùng tuyệt đối
+      seenTodayMap[rawId] = true;
+
       var dTotal = Number(rawData[d][7]);
       var d1Val = Number(rawData[d][4]);
       var d2Val = Number(rawData[d][5]);
@@ -1009,8 +1021,8 @@ function updatePredictionSheet() {
       });
 
       todayDraws.push({
-        draw_id: String(rawData[d][0]).replace("#", "").trim().padStart(7, "0"),
-        date: rowDate,
+        draw_id: rawId,
+        date: refDateStr,
         time: String(rawData[d][2] || ""),
         slot: Number(rawData[d][3] || 0),
         d1: d1Val,
@@ -1029,10 +1041,14 @@ function updatePredictionSheet() {
     var fallbackDate = extractDateStr(rawData[rawData.length - 1][1]);
     if (fallbackDate && fallbackDate !== refDateStr) {
       refDateStr = fallbackDate;
+      var seenFallbackMap = {};
       for (var dFb = 0; dFb < rawData.length; dFb++) {
+        var rawFbId = String(rawData[dFb][0]).replace(/[^0-9]/g, "").padStart(7, "0");
+        if (!rawFbId || rawFbId === "0000000" || seenFallbackMap[rawFbId]) continue;
         if (extractDateStr(rawData[dFb][1]) === refDateStr) {
+          seenFallbackMap[rawFbId] = true;
           todayDraws.push({
-            draw_id: String(rawData[dFb][0]).replace("#", "").trim().padStart(7, "0"),
+            draw_id: rawFbId,
             date: refDateStr,
             time: String(rawData[dFb][2] || ""),
             slot: Number(rawData[dFb][3] || 0),
@@ -1347,9 +1363,16 @@ function updatePredictionSheet() {
     var rowNum = 25 + upIdx;
 
     // CÔNG THỨC ĐỘNG: Tự động ánh xạ kết quả từ 'Chi tiết' ngay lập tức (0.1s)
-    var formulaDice = '=IFERROR(INDEX(\'Chi tiết\'!$I:$I, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)), "⏳ Đang chờ mở thưởng...")';
-    var formulaResult = '=IF(I' + rowNum + '="⏳ Đang chờ mở thưởng...", "⏳ Chờ quay số", IF(ISNUMBER(SEARCH("' + pItem.side + '", I' + rowNum + ')), "🎯 Trúng Cửa", "Lệch"))';
-    var formulaPnl = '=IF(I' + rowNum + '="⏳ Đang chờ mở thưởng...", "⏳ Chờ kết quả", IF(ISNUMBER(SEARCH("' + pItem.side + '", I' + rowNum + ')), "+5.000 đ", "-10.000 đ"))';
+    // Cột I: Hiển thị bộ số chuẩn xác 'd1 - d2 - d3 (Tổng total)'
+    var formulaDice = '=IFERROR(INDEX(\'Chi tiết\'!$E:$E, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)) & " - " & INDEX(\'Chi tiết\'!$F:$F, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)) & " - " & INDEX(\'Chi tiết\'!$G:$G, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)) & " (Tổng " & INDEX(\'Chi tiết\'!$H:$H, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)) & ")", "⏳ Đang chờ mở thưởng...")';
+
+    // Cột J: Đối chiếu kết quả với Cửa dự đoán (Nhỏ: <=9, Hòa: 10..11, Lớn: >=12)
+    var totLookup = 'INDEX(\'Chi tiết\'!$H:$H, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0))';
+    var actualSideFormula = 'IF(' + totLookup + '<=9, "Nhỏ", IF(' + totLookup + '<=11, "Hòa", "Lớn"))';
+    var formulaResult = '=IF(ISNA(MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)), "⏳ Chờ quay số", IF(' + actualSideFormula + '="' + pItem.pureSide + '", "🎯 Trúng Cửa (" & ' + actualSideFormula + ' & ")", "Lệch (" & ' + actualSideFormula + ' & ")"))';
+
+    // Cột K: Tính PnL dự kiến
+    var formulaPnl = '=IF(ISNA(MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)), "⏳ Chờ kết quả", IF(' + actualSideFormula + '="' + pItem.pureSide + '", "+5.000 đ", "-10.000 đ"))';
 
     upcomingRows.push([
       "#" + upIdStr + " [KỲ " + upcomingColors[upIdx].label + "]",
