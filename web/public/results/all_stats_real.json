@@ -4,7 +4,7 @@
     "total_draws": 99701,
     "version": "1.0.0",
     "seed": 20261109,
-    "computed_at": "2026-11-10T20:26:09.629422"
+    "computed_at": "2026-11-11T02:21:22.374081"
   },
   "m1_m2_distribution": {
     "n": 99701,
@@ -648,7 +648,7 @@
       "expected_mean_gap": 72.0,
       "max_gap": 468,
       "ks_statistic": 0.0437,
-      "ks_p_value": 0.011680442733195835,
+      "ks_p_value": 0.011680442733195759,
       "is_geometric": false
     },
     "5": {
