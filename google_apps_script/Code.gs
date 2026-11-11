@@ -1023,6 +1023,31 @@ function updatePredictionSheet() {
   }
 
   todayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
+
+  // Dự phòng: Nếu hôm nay chưa có kỳ nào trong rawData (ví dụ sáng sớm), lấy ngày của kỳ gần nhất
+  if (todayDraws.length === 0 && rawData.length > 0) {
+    var fallbackDate = extractDateStr(rawData[rawData.length - 1][1]);
+    if (fallbackDate && fallbackDate !== refDateStr) {
+      refDateStr = fallbackDate;
+      for (var dFb = 0; dFb < rawData.length; dFb++) {
+        if (extractDateStr(rawData[dFb][1]) === refDateStr) {
+          todayDraws.push({
+            draw_id: String(rawData[dFb][0]).replace("#", "").trim().padStart(7, "0"),
+            date: refDateStr,
+            time: String(rawData[dFb][2] || ""),
+            slot: Number(rawData[dFb][3] || 0),
+            d1: Number(rawData[dFb][4]),
+            d2: Number(rawData[dFb][5]),
+            d3: Number(rawData[dFb][6]),
+            total: Number(rawData[dFb][7]),
+            result: String(rawData[dFb][8] || "")
+          });
+        }
+      }
+      todayDraws.sort(function(a, b) { return Number(a.draw_id) - Number(b.draw_id); });
+    }
+  }
+
   var totalTodayDraws = todayDraws.length;
 
   // TÍNH TOÁN GAP THỰC TẾ XUYÊN NGÀY (QUÉT LÙI TỪ KỲ MỚI NHẤT TRONG RAW DATA)
@@ -1290,8 +1315,9 @@ function updatePredictionSheet() {
 
   // DỰ ĐOÁN 10 KỲ TIẾP THEO (+1 đến +10)
   var lastTodayDraw = (totalTodayDraws > 0) ? todayDraws[totalTodayDraws - 1] : null;
-  var lastDrawNum = lastTodayDraw ? Number(lastTodayDraw.draw_id) : (refDateStr === "2026-11-10" ? 195420 : 0);
-  var lastSlot = (refDateStr === "2026-11-10" && lastDrawNum >= 195421) ? (lastDrawNum - 195420) : (totalTodayDraws > 0 ? totalTodayDraws : 0);
+  var lastDrawNum = lastTodayDraw ? Number(lastTodayDraw.draw_id) : (rawData.length > 0 ? Number(String(rawData[rawData.length - 1][0]).replace("#","")) : 195579);
+  var lastSlot = ((lastDrawNum - 195580) % 159) + 1;
+  if (lastSlot < 1 || isNaN(lastSlot)) lastSlot = (totalTodayDraws > 0 ? totalTodayDraws : 1);
   var lastSumForPred = lastTodayDraw ? lastTodayDraw.total : (lastSum || 10);
 
   var upcomingPreds = predictMultiStep(lastSumForPred, 10, isLateSession);
@@ -1318,6 +1344,12 @@ function updatePredictionSheet() {
     var pItem = upcomingPreds[upIdx];
     var upCombo = BEST_DICE_COMBO[pItem.sum] || [3, 4, 4];
     var upComboStr = upCombo[0] + " - " + upCombo[1] + " - " + upCombo[2];
+    var rowNum = 25 + upIdx;
+
+    // CÔNG THỨC ĐỘNG: Tự động ánh xạ kết quả từ 'Chi tiết' ngay lập tức (0.1s)
+    var formulaDice = '=IFERROR(INDEX(\'Chi tiết\'!$I:$I, MATCH("' + upIdStr + '", \'Chi tiết\'!$A:$A, 0)), "⏳ Đang chờ mở thưởng...")';
+    var formulaResult = '=IF(I' + rowNum + '="⏳ Đang chờ mở thưởng...", "⏳ Chờ quay số", IF(ISNUMBER(SEARCH("' + pItem.side + '", I' + rowNum + ')), "🎯 Trúng Cửa", "Lệch"))';
+    var formulaPnl = '=IF(I' + rowNum + '="⏳ Đang chờ mở thưởng...", "⏳ Chờ kết quả", IF(ISNUMBER(SEARCH("' + pItem.side + '", I' + rowNum + ')), "+5.000 đ", "-10.000 đ"))';
 
     upcomingRows.push([
       "#" + upIdStr + " [KỲ " + upcomingColors[upIdx].label + "]",
@@ -1328,9 +1360,9 @@ function updatePredictionSheet() {
       pItem.side,
       pItem.diceText,
       pItem.confLabel,
-      "⏳ Đang chờ mở thưởng...",
-      "⏳ Chờ quay số",
-      "⏳ Chờ kết quả",
+      formulaDice,
+      formulaResult,
+      formulaPnl,
       "-"
     ]);
   }
@@ -1354,7 +1386,8 @@ function updatePredictionSheet() {
   for (var k = todayDraws.length - 1; k >= 0; k--) {
     var cur = todayDraws[k];
     var numIdK = Number(cur.draw_id);
-    var curSlot = (cur.date === "2026-11-10" && numIdK >= 195421) ? (numIdK - 195420) : (cur.slot || (k + 1));
+    var curSlot = ((numIdK - 195580) % 159) + 1;
+    if (curSlot < 1 || isNaN(curSlot)) curSlot = (cur.slot || (k + 1));
     if (curSlot < 1) curSlot = 1;
     if (curSlot > 159) curSlot = 159;
     var drawTimeStr = formatSlotTime(curSlot);

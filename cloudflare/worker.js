@@ -25,7 +25,39 @@ export default {
       });
     }
 
-    // 2. Health check endpoint (GET /)
+    const url = new URL(request.url);
+
+    // 2. Proxy trang Thống Kê Realtime (GET /thong-ke)
+    if (url.pathname.includes("thong-ke")) {
+      const THONG_KE_URL = "https://vietlott.vn/vi/choi/bingo/thong-ke-so-trung";
+      try {
+        const response = await fetch(THONG_KE_URL, {
+          method: "GET",
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Referer": "https://vietlott.vn/"
+          }
+        });
+        const html = await response.text();
+        return new Response(html, {
+          status: response.status,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-cache, no-store, must-revalidate"
+          }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: true, message: err.toString() }), {
+          status: 502,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+    }
+
+    // 3. Health check endpoint (GET /)
     if (request.method === "GET") {
       return new Response(
         JSON.stringify({
