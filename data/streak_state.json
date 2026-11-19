@@ -1,10 +1,10 @@
 {
-  "last_processed_draw_id": "0196859",
+  "last_processed_draw_id": "0196932",
   "campaigns": {
     "LON": {
-      "in_progress": false,
-      "current_step": 0,
-      "start_draw_id": null
+      "in_progress": true,
+      "current_step": 2,
+      "start_draw_id": "0196932"
     },
     "NHO": {
       "in_progress": false,
@@ -13,7 +13,7 @@
     }
   },
   "warned_gaps": {
-    "LON": 0,
+    "LON": 12,
     "NHO": 0
   }
 }
