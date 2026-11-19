@@ -3,26 +3,26 @@
   "models": {
     "uniform_baseline": {
       "model_name": "uniform_baseline",
-      "mean_log_loss": 2.49523,
-      "mean_brier_score": 0.9074,
+      "mean_log_loss": 2.49577,
+      "mean_brier_score": 0.90745,
       "top3_hit_rate": 36.0,
       "diebold_mariano_stat": 0.0,
       "diebold_mariano_p_value": 1.0
     },
     "hot_3": {
       "model_name": "hot_3",
-      "mean_log_loss": 2.50536,
-      "mean_brier_score": 0.90963,
+      "mean_log_loss": 2.5059,
+      "mean_brier_score": 0.90969,
       "top3_hit_rate": 34.64,
-      "diebold_mariano_stat": 5.7357,
+      "diebold_mariano_stat": 5.7393,
       "diebold_mariano_p_value": 0.0,
       "dm_p_adjusted": 0.0,
       "is_significantly_better": false
     },
     "cold_3": {
       "model_name": "cold_3",
-      "mean_log_loss": 2.49601,
-      "mean_brier_score": 0.90741,
+      "mean_log_loss": 2.49655,
+      "mean_brier_score": 0.90746,
       "top3_hit_rate": 36.0,
       "diebold_mariano_stat": 1.3689,
       "diebold_mariano_p_value": 0.171,
@@ -31,20 +31,20 @@
     },
     "bayes": {
       "model_name": "bayes",
-      "mean_log_loss": 2.51017,
-      "mean_brier_score": 0.90929,
+      "mean_log_loss": 2.51066,
+      "mean_brier_score": 0.90934,
       "top3_hit_rate": 34.7,
-      "diebold_mariano_stat": 6.424,
+      "diebold_mariano_stat": 6.3935,
       "diebold_mariano_p_value": 0.0,
       "dm_p_adjusted": 0.0,
       "is_significantly_better": false
     },
     "markov_1": {
       "model_name": "markov_1",
-      "mean_log_loss": 2.6643,
-      "mean_brier_score": 0.92603,
-      "top3_hit_rate": 33.28,
-      "diebold_mariano_stat": 17.9225,
+      "mean_log_loss": 2.66475,
+      "mean_brier_score": 0.92601,
+      "top3_hit_rate": 33.34,
+      "diebold_mariano_stat": 17.8984,
       "diebold_mariano_p_value": 0.0,
       "dm_p_adjusted": 0.0,
       "is_significantly_better": false
